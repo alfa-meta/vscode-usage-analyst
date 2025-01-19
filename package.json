@@ -11,6 +11,9 @@
     "Other"
   ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:vscode-usage-analyst.analyst"
+  ],
   "contributes": {
     "viewsContainers": {
     "activitybar": [
@@ -31,7 +34,7 @@
   },
     "commands": [
       {
-        "command": "vscode-time-tracker.analyst",
+        "command": "vscode-usage-analyst.analyst",
         "title": "Show Time Spent"
       }
     ]

@@ -1,86 +1,84 @@
 import * as vscode from "vscode";
 
-export function activate(context: vscode.ExtensionContext) {
-  let totalKeyStrokes = 0; // To count keystrokes
-  let totalFilesOpened = 0; // To count files opened
-  let totalSelections = 0; // To count text selections
-  let totalSeconds = 0; // To track total time spent
 
+const usageStats = {
+  totalKeyStrokes: 0,
+  totalFilesOpened: 0,
+  totalSelections: 0,
+  totalSeconds: 0,
+};
+
+class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
+  private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
+  readonly onDidChangeTreeData: vscode.Event<UsageItem | undefined | void> = this._onDidChangeTreeData.event;
+
+  getTreeItem(element: UsageItem): vscode.TreeItem {
+    return element;
+  }
+
+  getChildren(element?: UsageItem): Thenable<UsageItem[]> {
+    if (!element) {
+      return Promise.resolve([
+        new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
+        new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
+        new UsageItem("Selections: " + usageStats.totalSelections),
+        new UsageItem("Time Spent: " + usageStats.totalSeconds + "s"),
+      ]);
+    }
+    return Promise.resolve([]);
+  }
+}
+
+
+class UsageItem extends vscode.TreeItem {
+  constructor(label: string) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+  }
+}
+
+
+
+export function activate(context: vscode.ExtensionContext) {
   let isFocused = true; // Track whether the window is focused
   const interval = setInterval(() => {
     if (isFocused) {
-      totalSeconds += 1;
+      usageStats.totalSeconds += 1;
     }
   }, 1000);
 
-  // Track keystrokes
-  const disposableKeystrokes = vscode.workspace.onDidChangeTextDocument(
-    (event) => {
-      totalKeyStrokes += event.contentChanges.length;
-    }
-  );
-
-  // Track file open events
-  const disposableFilesOpened = vscode.workspace.onDidOpenTextDocument(() => {
-    totalFilesOpened += 1;
+  const disposableKeyPresses = vscode.window.onDidChangeTextEditorSelection(() => {
+    usageStats.totalKeyStrokes++;
   });
 
-  // Track text selections
-  const disposableSelections = vscode.window.onDidChangeTextEditorSelection(
-    () => {
-      totalSelections += 1;
-    }
-  );
+  const disposableKeystrokes = vscode.workspace.onDidChangeTextDocument((event) => {
+    usageStats.totalKeyStrokes += event.contentChanges.length;
+  });
 
-  // Track window focus/blur for accurate timing
-  const disposableWindowState = vscode.window.onDidChangeWindowState(
-    (state) => {
-      isFocused = state.focused;
-    }
-  );
+  const disposableFilesOpened = vscode.workspace.onDidOpenTextDocument(() => {
+    usageStats.totalFilesOpened += 1;
+  });
 
-  // Register a command to show a webview panel
-  const disposableAnalyst = vscode.commands.registerCommand(
-    "vscode-usage-analyst.analyst",
-    () => {
-      const panel = vscode.window.createWebviewPanel(
-        "usageOverview",
-        "Usage Overview",
-        vscode.ViewColumn.One,
-        {
-          enableScripts: true, // Enable JavaScript in the webview
-        }
-      );
-  
-      panel.webview.html = getWebviewContent();
-  
-      // Handle messages from the webview
-      panel.webview.onDidReceiveMessage((message) => {
-        if (message.command === "getStats") {
-          panel.webview.postMessage({
-            keys: totalKeyStrokes,
-            files: totalFilesOpened,
-            selections: totalSelections,
-            time: totalSeconds,
-          });
-        }
-      });
-    }
-  );
-  
+  const disposableSelections = vscode.window.onDidChangeTextEditorSelection(() => {
+    usageStats.totalSelections += 1;
+  });
 
-  // Push disposables to context subscriptions
+  const disposableWindowState = vscode.window.onDidChangeWindowState((state) => {
+    isFocused = state.focused;
+  });
+
+  const usageOverviewProvider = new UsageOverviewProvider();
+  vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
+
+  context.subscriptions.push(disposableKeyPresses);
   context.subscriptions.push(disposableKeystrokes);
   context.subscriptions.push(disposableFilesOpened);
   context.subscriptions.push(disposableSelections);
   context.subscriptions.push(disposableWindowState);
-  context.subscriptions.push(disposableAnalyst);
-
-  // Clean up the interval when the extension is deactivated
   context.subscriptions.push({
     dispose: () => clearInterval(interval),
   });
 }
+
 
 export function deactivate() {
   // Clean up resources (if necessary)
