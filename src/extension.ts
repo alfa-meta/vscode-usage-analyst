@@ -40,26 +40,41 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Register a command to show a webview panel
-  const disposableShowTime = vscode.commands.registerCommand(
-    "vscode-usage-analyst.showTime",
+  const disposableAnalyst = vscode.commands.registerCommand(
+    "vscode-usage-analyst.analyst",
     () => {
       const panel = vscode.window.createWebviewPanel(
         "usageOverview",
         "Usage Overview",
         vscode.ViewColumn.One,
-        {}
+        {
+          enableScripts: true, // Enable JavaScript in the webview
+        }
       );
-
+  
       panel.webview.html = getWebviewContent();
+  
+      // Handle messages from the webview
+      panel.webview.onDidReceiveMessage((message) => {
+        if (message.command === "getStats") {
+          panel.webview.postMessage({
+            keys: totalKeyStrokes,
+            files: totalFilesOpened,
+            selections: totalSelections,
+            time: totalSeconds,
+          });
+        }
+      });
     }
   );
+  
 
   // Push disposables to context subscriptions
   context.subscriptions.push(disposableKeystrokes);
   context.subscriptions.push(disposableFilesOpened);
   context.subscriptions.push(disposableSelections);
   context.subscriptions.push(disposableWindowState);
-  context.subscriptions.push(disposableShowTime);
+  context.subscriptions.push(disposableAnalyst);
 
   // Clean up the interval when the extension is deactivated
   context.subscriptions.push({
