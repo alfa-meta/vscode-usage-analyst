@@ -1,0 +1,54 @@
+{
+  "name": "vscode-usage-analyst",
+  "displayName": "VSCode Usage Analyst",
+  "description": "Tracks how long you use VS Code in a session",
+  "version": "0.0.2",
+  "publisher": "alfa",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vscode-usage-analyst.showTime",
+    "*"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-usage-analyst.showTime",
+        "title": "Show Time Spent"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vscodeUsageAnalyst",
+          "title": "Usage Analyst",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "vscodeUsageAnalyst": [
+        {
+          "id": "usageOverview",
+          "name": "Usage Overview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "vscode:prepublish": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/vscode": "^1.96.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {}
+}
