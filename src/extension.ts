@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
 
 const usageStats = {
   totalKeyStrokes: 0,
@@ -6,6 +8,22 @@ const usageStats = {
   totalSelections: 0,
   totalSeconds: 0,
 };
+
+const dataFilePath = path.join(
+  process.env.HOME || process.env.USERPROFILE || "./",
+  ".vscodeUsageStats.json"
+);
+
+function saveStatsToFile() {
+  fs.writeFileSync(dataFilePath, JSON.stringify(usageStats, null, 2));
+}
+
+function loadStatsFromFile() {
+  if (fs.existsSync(dataFilePath)) {
+    const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
+    Object.assign(usageStats, data);
+  }
+}
 
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
@@ -39,6 +57,8 @@ class UsageItem extends vscode.TreeItem {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  loadStatsFromFile();
+
   let isFocused = true; // Track whether the window is focused
   const interval = setInterval(() => {
     if (isFocused) {
@@ -79,10 +99,13 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposableSelections);
   context.subscriptions.push(disposableWindowState);
   context.subscriptions.push({
-    dispose: () => clearInterval(interval),
+    dispose: () => {
+      clearInterval(interval);
+      saveStatsToFile();
+    },
   });
 }
 
 export function deactivate() {
-  // Clean up resources (if necessary)
+  saveStatsToFile();
 }
