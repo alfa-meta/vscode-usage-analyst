@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-
 const usageStats = {
   totalKeyStrokes: 0,
   totalFilesOpened: 0,
@@ -27,16 +26,17 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     }
     return Promise.resolve([]);
   }
-}
 
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+}
 
 class UsageItem extends vscode.TreeItem {
   constructor(label: string) {
     super(label, vscode.TreeItemCollapsibleState.None);
   }
 }
-
-
 
 export function activate(context: vscode.ExtensionContext) {
   let isFocused = true; // Track whether the window is focused
@@ -46,28 +46,32 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }, 1000);
 
+  const usageOverviewProvider = new UsageOverviewProvider();
+  vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
+
   const disposableKeyPresses = vscode.window.onDidChangeTextEditorSelection(() => {
     usageStats.totalKeyStrokes++;
+    usageOverviewProvider.refresh();
   });
 
   const disposableKeystrokes = vscode.workspace.onDidChangeTextDocument((event) => {
     usageStats.totalKeyStrokes += event.contentChanges.length;
+    usageOverviewProvider.refresh();
   });
 
   const disposableFilesOpened = vscode.workspace.onDidOpenTextDocument(() => {
-    usageStats.totalFilesOpened += 1;
+    usageStats.totalFilesOpened++;
+    usageOverviewProvider.refresh();
   });
 
   const disposableSelections = vscode.window.onDidChangeTextEditorSelection(() => {
-    usageStats.totalSelections += 1;
+    usageStats.totalSelections++;
+    usageOverviewProvider.refresh();
   });
 
   const disposableWindowState = vscode.window.onDidChangeWindowState((state) => {
     isFocused = state.focused;
   });
-
-  const usageOverviewProvider = new UsageOverviewProvider();
-  vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
 
   context.subscriptions.push(disposableKeyPresses);
   context.subscriptions.push(disposableKeystrokes);
@@ -79,56 +83,6 @@ export function activate(context: vscode.ExtensionContext) {
   });
 }
 
-
 export function deactivate() {
   // Clean up resources (if necessary)
-}
-
-function getWebviewContent() {
-  // HTML content for the webview
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Usage Overview</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          padding: 10px;
-        }
-        h1 {
-          color: #007acc;
-        }
-        .stat {
-          margin: 5px 0;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Usage Overview</h1>
-      <div class="stat"><strong>Keys Pressed:</strong> <span id="keys">0</span></div>
-      <div class="stat"><strong>Files Opened:</strong> <span id="files">0</span></div>
-      <div class="stat"><strong>Text Selections:</strong> <span id="selections">0</span></div>
-      <div class="stat"><strong>Time Spent:</strong> <span id="time">0s</span></div>
-      <script>
-        const vscode = acquireVsCodeApi();
-        window.onload = () => {
-          setInterval(() => {
-            vscode.postMessage({ command: "getStats" });
-          }, 1000);
-        };
-
-        window.addEventListener("message", (event) => {
-          const stats = event.data;
-          document.getElementById("keys").innerText = stats.keys;
-          document.getElementById("files").innerText = stats.files;
-          document.getElementById("selections").innerText = stats.selections;
-          document.getElementById("time").innerText = stats.time;
-        });
-      </script>
-    </body>
-    </html>
-  `;
 }
