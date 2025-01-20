@@ -6,6 +6,7 @@ const usageStats = {
   totalKeyStrokes: 0,
   totalFilesOpened: 0,
   totalSelections: 0,
+  totalGitCommits: 0,
   totalSeconds: 0,
 };
 
@@ -19,11 +20,16 @@ function saveStatsToFile() {
 }
 
 function loadStatsFromFile() {
-  if (fs.existsSync(dataFilePath)) {
-    const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
-    Object.assign(usageStats, data);
+  try {
+    if (fs.existsSync(dataFilePath)) {
+      const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
+      Object.assign(usageStats, data);
+    }
+  } catch (error) {
+    console.error("Error loading usage stats:", error);
   }
 }
+
 
 function formatTime(seconds: number) {
   const years = Math.floor(seconds / (365 * 24 * 60 * 60));
@@ -62,6 +68,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
         new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
         new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
         new UsageItem("Selections: " + usageStats.totalSelections),
+        new UsageItem("Git Commits: " + usageStats.totalGitCommits),
         new UsageItem("Time Spent: " + formatTime(usageStats.totalSeconds)),
       ]);
     }
@@ -88,7 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
       usageStats.totalSeconds += 1;
       usageOverviewProvider.refresh(); // Refresh tree view
     }
-  }, 1000);  
+  }, 1000);
 
   const usageOverviewProvider = new UsageOverviewProvider();
   vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
@@ -117,17 +124,44 @@ export function activate(context: vscode.ExtensionContext) {
     isFocused = state.focused;
   });
 
-  context.subscriptions.push(disposableKeyPresses);
-  context.subscriptions.push(disposableKeystrokes);
-  context.subscriptions.push(disposableFilesOpened);
-  context.subscriptions.push(disposableSelections);
-  context.subscriptions.push(disposableWindowState);
-  context.subscriptions.push({
+  const gitExtension = vscode.extensions.getExtension("vscode.git");
+  if (gitExtension) {
+    gitExtension.activate().then(() => {
+      const api = gitExtension.exports.getAPI(1);
+  
+      api.repositories.forEach((repository: any) => {
+        let previousCommit = repository.state.HEAD?.commit; // Track the previous HEAD commit
+  
+        repository.state.onDidChange(() => {
+          const currentCommit = repository.state.HEAD?.commit;
+          console.log("Am I HERE?")
+  
+          // Increment only if a new commit is detected (currentCommit changes)
+          if (currentCommit && currentCommit !== previousCommit) {
+            usageStats.totalGitCommits++;
+            usageOverviewProvider.refresh();
+            previousCommit = currentCommit; // Update the previous commit
+          }
+        });
+      });
+    });
+  }
+  
+  
+
+  // context.subscriptions.push(disposableKeyPresses);
+  // context.subscriptions.push(disposableKeystrokes);
+  // context.subscriptions.push(disposableFilesOpened);
+  // context.subscriptions.push(disposableSelections);
+  // context.subscriptions.push(disposableWindowState);
+  context.subscriptions.push(disposableKeyPresses, disposableKeystrokes, disposableFilesOpened, disposableSelections, disposableWindowState, {
     dispose: () => {
       clearInterval(interval);
       saveStatsToFile();
+      console.log("Extension deactivated, stats saved.");
     },
   });
+
 }
 
 export function deactivate() {
