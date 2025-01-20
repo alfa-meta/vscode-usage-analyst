@@ -1,36 +1,7 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
-import * as cp from "child_process";
 
-const usageStats = {
-  currentGitBranch: "None",
-  totalGitCommits: 0,
-  totalKeyStrokes: 0,
-  totalFilesOpened: 0,
-  totalSelections: 0,
-  totalSeconds: 0,
-};
-
-const dataFilePath = path.join(
-  process.env.HOME || process.env.USERPROFILE || "./",
-  ".vscodeUsageStats.json"
-);
-
-function saveStatsToFile() {
-  fs.writeFileSync(dataFilePath, JSON.stringify(usageStats, null, 2));
-}
-
-function loadStatsFromFile() {
-  try {
-    if (fs.existsSync(dataFilePath)) {
-      const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
-      Object.assign(usageStats, data);
-    }
-  } catch (error) {
-    console.error("Error loading usage stats:", error);
-  }
-}
+import { getCurrentGitBranch, getCurrentGitCommitValue } from "./gitManagement";
+import { saveStatsToFile, loadStatsFromFile, usageStats } from "./fileManagement";
 
 function formatTime(seconds: number) {
   const years = Math.floor(seconds / (365 * 24 * 60 * 60));
@@ -53,49 +24,6 @@ function formatTime(seconds: number) {
   if (seconds > 0) parts.push(`${seconds}s`);
 
   return parts.join(" ");
-}
-
-function isGitRepository(): boolean {
-  try {
-    cp.execSync("git rev-parse --is-inside-work-tree", {
-      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function getCurrentGitBranch(): string {
-  if (!isGitRepository()) {
-    return "Not a Git repository";
-  }
-
-  try {
-    const branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
-      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-    }).toString().trim();
-    return branch;
-  } catch (error) {
-    console.error("Error getting current Git branch:", error);
-    return "Unknown";
-  }
-}
-
-function getCurrentGitCommitValue(): number {
-  if (!isGitRepository()) {
-    return 0;
-  }
-
-  try {
-    const output = cp.execSync("git rev-list --count HEAD", {
-      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-    }).toString().trim();
-    return parseInt(output, 10);
-  } catch (error) {
-    console.error("Error counting commits:", error);
-    return 0;
-  }
 }
 
 
