@@ -25,6 +25,29 @@ function loadStatsFromFile() {
   }
 }
 
+function formatTime(seconds: number) {
+  const years = Math.floor(seconds / (365 * 24 * 60 * 60));
+  seconds %= 365 * 24 * 60 * 60;
+  const weeks = Math.floor(seconds / (7 * 24 * 60 * 60));
+  seconds %= 7 * 24 * 60 * 60;
+  const days = Math.floor(seconds / (24 * 60 * 60));
+  seconds %= 24 * 60 * 60;
+  const hours = Math.floor(seconds / (60 * 60));
+  seconds %= 60 * 60;
+  const minutes = Math.floor(seconds / 60);
+  seconds %= 60;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years}y`);
+  if (weeks > 0) parts.push(`${weeks}w`);
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0) parts.push(`${seconds}s`);
+
+  return parts.join(" ");
+}
+
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<UsageItem | undefined | void> = this._onDidChangeTreeData.event;
@@ -39,7 +62,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
         new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
         new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
         new UsageItem("Selections: " + usageStats.totalSelections),
-        new UsageItem("Time Spent: " + usageStats.totalSeconds + "s"),
+        new UsageItem("Time Spent: " + formatTime(usageStats.totalSeconds)),
       ]);
     }
     return Promise.resolve([]);
@@ -63,6 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
   const interval = setInterval(() => {
     if (isFocused) {
       usageStats.totalSeconds += 1;
+      vscode.commands.executeCommand('usageOverview.refresh');
     }
   }, 1000);
 
