@@ -5,10 +5,10 @@ import * as cp from "child_process";
 
 const usageStats = {
   currentGitBranch: "None",
+  totalGitCommits: 0,
   totalKeyStrokes: 0,
   totalFilesOpened: 0,
   totalSelections: 0,
-  totalGitCommits: 0,
   totalSeconds: 0,
 };
 
@@ -55,7 +55,22 @@ function formatTime(seconds: number) {
   return parts.join(" ");
 }
 
+function isGitRepository(): boolean {
+  try {
+    cp.execSync("git rev-parse --is-inside-work-tree", {
+      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function getCurrentGitBranch(): string {
+  if (!isGitRepository()) {
+    return "Not a Git repository";
+  }
+
   try {
     const branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
       cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
@@ -66,6 +81,23 @@ function getCurrentGitBranch(): string {
     return "Unknown";
   }
 }
+
+function getCurrentGitCommitValue(): number {
+  if (!isGitRepository()) {
+    return 0;
+  }
+
+  try {
+    const output = cp.execSync("git rev-list --count HEAD", {
+      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+    }).toString().trim();
+    return parseInt(output, 10);
+  } catch (error) {
+    console.error("Error counting commits:", error);
+    return 0;
+  }
+}
+
 
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
@@ -79,10 +111,10 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     if (!element) {
       return Promise.resolve([
         new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
+        new UsageItem("Git Commits: " + usageStats.totalGitCommits),
         new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
         new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
         new UsageItem("Selections: " + usageStats.totalSelections),
-        new UsageItem("Git Commits: " + usageStats.totalGitCommits),
         new UsageItem("Time Spent: " + formatTime(usageStats.totalSeconds)),
       ]);
     }
@@ -110,6 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
   const interval = setInterval(() => {
     if (isFocused) {
       usageStats.currentGitBranch = getCurrentGitBranch();
+      usageStats.totalGitCommits = getCurrentGitCommitValue();
       usageStats.totalSeconds += 1;
       usageOverviewProvider.refresh();
     }
