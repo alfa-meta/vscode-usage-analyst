@@ -86,9 +86,9 @@ export function activate(context: vscode.ExtensionContext) {
   const interval = setInterval(() => {
     if (isFocused) {
       usageStats.totalSeconds += 1;
-      vscode.commands.executeCommand('usageOverview.refresh');
+      usageOverviewProvider.refresh(); // Refresh tree view
     }
-  }, 1000);
+  }, 1000);  
 
   const usageOverviewProvider = new UsageOverviewProvider();
   vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
