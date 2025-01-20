@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+import * as cp from "child_process";
 
 const usageStats = {
+  currentGitBranch: "None",
   totalKeyStrokes: 0,
   totalFilesOpened: 0,
   totalSelections: 0,
@@ -30,7 +32,6 @@ function loadStatsFromFile() {
   }
 }
 
-
 function formatTime(seconds: number) {
   const years = Math.floor(seconds / (365 * 24 * 60 * 60));
   seconds %= 365 * 24 * 60 * 60;
@@ -54,6 +55,18 @@ function formatTime(seconds: number) {
   return parts.join(" ");
 }
 
+function getCurrentGitBranch(): string {
+  try {
+    const branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
+      cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+    }).toString().trim();
+    return branch;
+  } catch (error) {
+    console.error("Error getting current Git branch:", error);
+    return "Unknown";
+  }
+}
+
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<UsageItem | undefined | void> = this._onDidChangeTreeData.event;
@@ -65,6 +78,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   getChildren(element?: UsageItem): Thenable<UsageItem[]> {
     if (!element) {
       return Promise.resolve([
+        new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
         new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
         new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
         new UsageItem("Selections: " + usageStats.totalSelections),
@@ -88,17 +102,18 @@ class UsageItem extends vscode.TreeItem {
 
 export function activate(context: vscode.ExtensionContext) {
   loadStatsFromFile();
-
+  const gitExtension = vscode.extensions.getExtension("vscode.git");
   let isFocused = true; // Track whether the window is focused
-  const interval = setInterval(() => {
-    if (isFocused) {
-      usageStats.totalSeconds += 1;
-      usageOverviewProvider.refresh(); // Refresh tree view
-    }
-  }, 1000);
-
   const usageOverviewProvider = new UsageOverviewProvider();
   vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
+
+  const interval = setInterval(() => {
+    if (isFocused) {
+      usageStats.currentGitBranch = getCurrentGitBranch();
+      usageStats.totalSeconds += 1;
+      usageOverviewProvider.refresh();
+    }
+  }, 1000);
 
   const disposableKeyPresses = vscode.window.onDidChangeTextEditorSelection(() => {
     usageStats.totalKeyStrokes++;
@@ -124,44 +139,20 @@ export function activate(context: vscode.ExtensionContext) {
     isFocused = state.focused;
   });
 
-  const gitExtension = vscode.extensions.getExtension("vscode.git");
-  if (gitExtension) {
-    gitExtension.activate().then(() => {
-      const api = gitExtension.exports.getAPI(1);
-  
-      api.repositories.forEach((repository: any) => {
-        let previousCommit = repository.state.HEAD?.commit; // Track the previous HEAD commit
-  
-        repository.state.onDidChange(() => {
-          const currentCommit = repository.state.HEAD?.commit;
-          console.log("Am I HERE?")
-  
-          // Increment only if a new commit is detected (currentCommit changes)
-          if (currentCommit && currentCommit !== previousCommit) {
-            usageStats.totalGitCommits++;
-            usageOverviewProvider.refresh();
-            previousCommit = currentCommit; // Update the previous commit
-          }
-        });
-      });
-    });
-  }
-  
-  
-
-  // context.subscriptions.push(disposableKeyPresses);
-  // context.subscriptions.push(disposableKeystrokes);
-  // context.subscriptions.push(disposableFilesOpened);
-  // context.subscriptions.push(disposableSelections);
-  // context.subscriptions.push(disposableWindowState);
-  context.subscriptions.push(disposableKeyPresses, disposableKeystrokes, disposableFilesOpened, disposableSelections, disposableWindowState, {
-    dispose: () => {
-      clearInterval(interval);
-      saveStatsToFile();
-      console.log("Extension deactivated, stats saved.");
-    },
-  });
-
+  context.subscriptions.push(
+    disposableKeyPresses,
+    disposableKeystrokes,
+    disposableFilesOpened,
+    disposableSelections,
+    disposableWindowState,
+    {
+      dispose: () => {
+        clearInterval(interval);
+        saveStatsToFile();
+        console.log("Extension deactivated, stats saved.");
+      },
+    }
+  );
 }
 
 export function deactivate() {
