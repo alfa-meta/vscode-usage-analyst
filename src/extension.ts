@@ -27,6 +27,9 @@ function formatTime(seconds: number) {
 }
 
 
+// Global Variables
+const openedFiles = new Set<string>();
+
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<UsageItem | undefined | void> = this._onDidChangeTreeData.event;
@@ -62,6 +65,7 @@ class UsageItem extends vscode.TreeItem {
   }
 }
 
+
 export function activate(context: vscode.ExtensionContext) {
   loadStatsFromFile();
   const gitExtension = vscode.extensions.getExtension("vscode.git");
@@ -89,9 +93,24 @@ export function activate(context: vscode.ExtensionContext) {
     usageOverviewProvider.refresh();
   });
 
-  const disposableFilesOpened = vscode.workspace.onDidOpenTextDocument(() => {
-    usageStats.totalFilesOpened++;
-    usageOverviewProvider.refresh();
+  const disposableFilesOpened = vscode.workspace.onDidOpenTextDocument((document) => {
+    const filePath = document.uri.fsPath;
+  
+    /*
+    * The reason why it checks for the .git fileName, is due to a bug in vscode extension api.
+    * The api returns two files a .git version of the same file and a regular string of the fileName.
+    */
+
+    if (!document.fileName.endsWith('.git')) {
+      openedFiles.add(filePath); // Track the file as opened
+      usageStats.totalFilesOpened++;
+      usageOverviewProvider.refresh();
+    }
+  });
+
+  const disposableFilesClosed = vscode.workspace.onDidCloseTextDocument((document) => {
+    const filePath = document.uri.fsPath;
+    openedFiles.delete(filePath);
   });
 
   const disposableSelections = vscode.window.onDidChangeTextEditorSelection(() => {
@@ -107,6 +126,7 @@ export function activate(context: vscode.ExtensionContext) {
     disposableKeyPresses,
     disposableKeystrokes,
     disposableFilesOpened,
+    disposableFilesClosed,
     disposableSelections,
     disposableWindowState,
     {
