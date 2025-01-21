@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import * as cp from "child_process";
 
+function getWorkspacePath(): string | undefined {
+  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+}
+
 export function isGitRepository(): boolean {
   try {
     cp.execSync("git rev-parse --is-inside-work-tree", {
@@ -8,6 +12,7 @@ export function isGitRepository(): boolean {
     });
     return true;
   } catch {
+    vscode.window.showWarningMessage("The current workspace is not a Git repository.");
     return false;
   }
 }
@@ -43,3 +48,32 @@ export function getCurrentGitCommitValue(): number {
     return 0;
   }
 }
+
+export function getGitBranches(): string[] {
+    if (!isGitRepository()) {
+      console.error("Not a Git repository.");
+      return [];
+    }
+  
+    try {
+      const workspacePath = getWorkspacePath();
+      if (!workspacePath) {
+        console.error("No workspace path available.");
+        return [];
+      }
+  
+      const result = cp.execSync("git branch --all", {
+        cwd: workspacePath,
+        encoding: "utf-8",
+      });
+  
+      return result
+        .split("\n")
+        .map(branch => branch.trim())
+        .filter(branch => branch);
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+      return [];
+    }
+  }
+  

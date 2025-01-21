@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { getCurrentGitBranch, getCurrentGitCommitValue } from "./gitManagement";
+import { getCurrentGitBranch, getCurrentGitCommitValue, getGitBranches } from "./gitManagement";
 import { saveStatsToFile, loadStatsFromFile, usageStats } from "./fileManagement";
 
 function formatTime(seconds: number) {
@@ -39,6 +39,8 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     if (!element) {
       return Promise.resolve([
         new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
+        new UsageItem("All Git Branches:"),
+            ...usageStats.listOfGitBranches.map(branch => new UsageItem("  - " + branch)),
         new UsageItem("Git Commits: " + usageStats.totalGitCommits),
         new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
         new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
@@ -70,6 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
   const interval = setInterval(() => {
     if (isFocused) {
       usageStats.currentGitBranch = getCurrentGitBranch();
+      usageStats.listOfGitBranches = getGitBranches(); // Fetch all branches
       usageStats.totalGitCommits = getCurrentGitCommitValue();
       usageStats.totalSeconds += 1;
       usageOverviewProvider.refresh();
