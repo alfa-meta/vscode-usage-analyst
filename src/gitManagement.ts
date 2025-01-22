@@ -7,6 +7,8 @@ function getWorkspacePath(): string | undefined {
 }
 
 export function isGitRepository(usageStats: UsageStats): boolean {
+  if (!usageStats.showGitWarning) return false;
+
   try {
     cp.execSync("git rev-parse --is-inside-work-tree", {
       cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
@@ -15,12 +17,23 @@ export function isGitRepository(usageStats: UsageStats): boolean {
   } catch {
     const now = Date.now();
     if (now - usageStats.lastGitWarningTime > 30000) { // 30 seconds in milliseconds
-      vscode.window.showWarningMessage("The current workspace is not a Git repository.");
+      vscode.window
+        .showInformationMessage(
+          "The current workspace is not a Git repository.",
+          "Don't show again"
+        )
+        .then((selection) => {
+          if (selection === "Don't show again") {
+            usageStats.showGitWarning = false;
+          }
+        });
+
       usageStats.lastGitWarningTime = now; // Update the timestamp
     }
     return false;
   }
 }
+
 
 export function getCurrentGitBranch(usageStats: UsageStats): string {
   if (!isGitRepository(usageStats)) {

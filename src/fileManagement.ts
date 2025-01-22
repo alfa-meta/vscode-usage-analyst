@@ -26,6 +26,7 @@ export interface UsageStats {
     listOfGitBranches: string[];
     totalGitCommits: number;
     lastGitWarningTime: number;
+    showGitWarning: boolean;
     totalKeyStrokes: number;
     totalFilesOpened: number;
     totalSelections: number;
@@ -39,6 +40,7 @@ export const usageStats: UsageStats = {
     listOfGitBranches: [],
     totalGitCommits: 0,
     lastGitWarningTime: 0,
+    showGitWarning: true,
     totalKeyStrokes: 0,
     totalFilesOpened: 0,
     totalSelections: 0,
