@@ -1,3 +1,4 @@
+import {UsageStats} from "./fileManagement";
 import * as vscode from "vscode";
 import * as cp from "child_process";
 
@@ -5,20 +6,24 @@ function getWorkspacePath(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
-export function isGitRepository(): boolean {
+export function isGitRepository(usageStats: UsageStats): boolean {
   try {
     cp.execSync("git rev-parse --is-inside-work-tree", {
       cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
     });
     return true;
   } catch {
-    vscode.window.showWarningMessage("The current workspace is not a Git repository.");
+    const now = Date.now();
+    if (now - usageStats.lastGitWarningTime > 30000) { // 30 seconds in milliseconds
+      vscode.window.showWarningMessage("The current workspace is not a Git repository.");
+      usageStats.lastGitWarningTime = now; // Update the timestamp
+    }
     return false;
   }
 }
 
-export function getCurrentGitBranch(): string {
-  if (!isGitRepository()) {
+export function getCurrentGitBranch(usageStats: UsageStats): string {
+  if (!isGitRepository(usageStats)) {
     return "Not a Git repository";
   }
 
@@ -33,8 +38,8 @@ export function getCurrentGitBranch(): string {
   }
 }
 
-export function getCurrentGitCommitValue(): number {
-  if (!isGitRepository()) {
+export function getCurrentGitCommitValue(usageStats: UsageStats): number {
+  if (!isGitRepository(usageStats)) {
     return 0;
   }
 
@@ -49,8 +54,8 @@ export function getCurrentGitCommitValue(): number {
   }
 }
 
-export function getGitBranches(): string[] {
-    if (!isGitRepository()) {
+export function getGitBranches(usageStats: UsageStats): string[] {
+    if (!isGitRepository(usageStats)) {
       console.error("Not a Git repository.");
       return [];
     }

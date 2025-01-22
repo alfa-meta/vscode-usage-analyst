@@ -114,9 +114,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   const interval = setInterval(() => {
     if (isFocused) {
-      usageStats.currentGitBranch = getCurrentGitBranch();
-      usageStats.listOfGitBranches = getGitBranches(); // Fetch all branches
-      usageStats.totalGitCommits = getCurrentGitCommitValue();
+      usageStats.currentGitBranch = getCurrentGitBranch(usageStats);
+      usageStats.listOfGitBranches = getGitBranches(usageStats); // Fetch all branches
+      usageStats.totalGitCommits = getCurrentGitCommitValue(usageStats);
       usageStats.totalSecondsWhilstWindowIsFocused += 1;
     } else {
       usageStats.totalSecondsOutsideVSCode += 1;

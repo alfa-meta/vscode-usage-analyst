@@ -21,10 +21,11 @@ export function loadStatsFromFile() {
     }
 }
 
-interface UsageStats {
+export interface UsageStats {
     currentGitBranch: string;
     listOfGitBranches: string[];
     totalGitCommits: number;
+    lastGitWarningTime: number;
     totalKeyStrokes: number;
     totalFilesOpened: number;
     totalSelections: number;
@@ -37,6 +38,7 @@ export const usageStats: UsageStats = {
     currentGitBranch: "None",
     listOfGitBranches: [],
     totalGitCommits: 0,
+    lastGitWarningTime: 0,
     totalKeyStrokes: 0,
     totalFilesOpened: 0,
     totalSelections: 0,
