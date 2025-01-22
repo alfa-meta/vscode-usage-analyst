@@ -28,7 +28,9 @@ interface UsageStats {
     totalKeyStrokes: number;
     totalFilesOpened: number;
     totalSelections: number;
-    totalSeconds: number;
+    totalSecondsWhilstWindowIsFocused: number;
+    totalSecondsOutsideVSCode: number;
+    totalSecondsWhilstVSCodeIsActive: number;
 }
 
 export const usageStats: UsageStats = {
@@ -38,5 +40,7 @@ export const usageStats: UsageStats = {
     totalKeyStrokes: 0,
     totalFilesOpened: 0,
     totalSelections: 0,
-    totalSeconds: 0,
+    totalSecondsWhilstWindowIsFocused: 0,
+    totalSecondsOutsideVSCode: 0,
+    totalSecondsWhilstVSCodeIsActive: 0,
 };

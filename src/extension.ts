@@ -45,7 +45,9 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
         new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
         new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
         new UsageItem("Selections: " + usageStats.totalSelections),
-        new UsageItem("Time Spent: " + formatTime(usageStats.totalSeconds)),
+        new UsageItem("Time Spent: " + formatTime(usageStats.totalSecondsWhilstWindowIsFocused)),
+        new UsageItem("Time Spent outside of VSCode: " + formatTime(usageStats.totalSecondsOutsideVSCode)),
+        new UsageItem("Time Spent whilst VSCode is active: " + formatTime(usageStats.totalSecondsWhilstVSCodeIsActive))
       ]);
     }
     return Promise.resolve([]);
@@ -80,9 +82,12 @@ export function activate(context: vscode.ExtensionContext) {
       usageStats.currentGitBranch = getCurrentGitBranch();
       usageStats.listOfGitBranches = getGitBranches(); // Fetch all branches
       usageStats.totalGitCommits = getCurrentGitCommitValue();
-      usageStats.totalSeconds += 1;
-      usageOverviewProvider.refresh();
+      usageStats.totalSecondsWhilstWindowIsFocused += 1;
+    } else {
+      usageStats.totalSecondsOutsideVSCode += 1;
     }
+    usageStats.totalSecondsWhilstVSCodeIsActive = usageStats.totalSecondsOutsideVSCode + usageStats.totalSecondsWhilstWindowIsFocused
+    usageOverviewProvider.refresh();
   }, 1000);
 
   const disposableKeyPresses = vscode.workspace.onDidChangeTextDocument((event) => {
