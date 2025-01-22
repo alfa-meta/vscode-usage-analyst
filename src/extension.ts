@@ -27,9 +27,6 @@ function formatTime(seconds: number) {
 }
 
 
-// Global Variables
-const openedFiles = new Set<string>();
-
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<UsageItem | undefined | void> = new vscode.EventEmitter<UsageItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<UsageItem | undefined | void> = this._onDidChangeTreeData.event;
@@ -65,6 +62,11 @@ class UsageItem extends vscode.TreeItem {
   }
 }
 
+// Global Variables
+const openedFiles = new Set<string>();
+
+let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
+
 
 export function activate(context: vscode.ExtensionContext) {
   loadStatsFromFile();
@@ -83,9 +85,16 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }, 1000);
 
-  const disposableKeyPresses = vscode.window.onDidChangeTextEditorSelection(() => {
-    usageStats.totalKeyStrokes++;
-    usageOverviewProvider.refresh();
+  const disposableKeyPresses = vscode.workspace.onDidChangeTextDocument((event) => {
+    const totalChanges = event.contentChanges.reduce((acc, change) => {
+      // Sum up the length of text changes (insertions + deletions)
+      return acc + Math.abs(change.text.length);
+    }, 0);
+  
+    if (isKeyEventProcessing && totalChanges > 0) {
+      usageStats.totalKeyStrokes++; // Increment keystrokes by 1 for each user action
+      usageOverviewProvider.refresh();
+    }
   });
 
   const disposableKeystrokes = vscode.workspace.onDidChangeTextDocument((event) => {
