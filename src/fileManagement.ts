@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
+import * as os from "os";
 
 export const dataFilePath = path.join(
     process.env.HOME || process.env.USERPROFILE || "./",
@@ -33,6 +34,7 @@ export interface UsageStats {
     totalSecondsWhilstWindowIsFocused: number;
     totalSecondsOutsideVSCode: number;
     totalSecondsWhilstVSCodeIsActive: number;
+    operatingSystem: string;
 }
 
 export const usageStats: UsageStats = {
@@ -47,4 +49,5 @@ export const usageStats: UsageStats = {
     totalSecondsWhilstWindowIsFocused: 0,
     totalSecondsOutsideVSCode: 0,
     totalSecondsWhilstVSCodeIsActive: 0,
+    operatingSystem: os.type(),
 };

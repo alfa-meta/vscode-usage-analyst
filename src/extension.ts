@@ -27,7 +27,21 @@ function formatTime(seconds: number) {
   return parts.join(" ");
 }
 
-function checkActiveApplications(){
+function checkActiveApplications() {
+  switch (usageStats.operatingSystem) {
+    case "Windows_NT":
+      windowsCheckActiveApplication();
+      break;
+    case "Linux":
+      linuxCheckActiveApplication();
+      break;
+    default:
+      console.error(`Unsupported operating system: ${usageStats.operatingSystem}`);
+  }
+}
+
+
+function windowsCheckActiveApplication(){
   // Run the ListActiveApps logic every second
   const powershellCommand = "Get-Process | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Name";
 
@@ -50,6 +64,31 @@ function checkActiveApplications(){
   });
 }
 
+function linuxCheckActiveApplication() {
+  // Command to list all running graphical applications
+  const command = `ps -eo comm | grep -E "^[^\\[]+" | sort | uniq`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error fetching active apps: ${error.message}`);
+      return;
+    }
+
+    if (stderr) {
+      console.error(`Stderr while fetching active apps: ${stderr}`);
+      return;
+    }
+
+    // Parse active applications
+    activeApplications = stdout
+      .trim()
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line); // Remove empty lines
+  });
+}
+
+
 
 
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
@@ -63,6 +102,9 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   getChildren(element?: UsageItem): Thenable<UsageItem[]> {
     if (!element) {
       return Promise.resolve([
+        new UsageItem("Operating System Info", [
+          new UsageItem("Operating System: " + usageStats.operatingSystem),
+        ], vscode.TreeItemCollapsibleState.Collapsed),
         new UsageItem("Git Info", [
           new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
           new UsageItem("All Git Branches:"),
