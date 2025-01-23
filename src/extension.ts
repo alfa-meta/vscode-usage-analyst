@@ -35,6 +35,9 @@ function checkActiveApplications() {
     case "Linux":
       linuxCheckActiveApplication();
       break;
+    case "Darwin":
+      linuxCheckActiveApplication();
+      break;
     default:
       console.error(`Unsupported operating system: ${usageStats.operatingSystem}`);
   }
@@ -100,29 +103,40 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   }
 
   getChildren(element?: UsageItem): Thenable<UsageItem[]> {
+    const usageItemTestRow: UsageItem[] = [];
+    const usageItemTestItem: UsageItem[] = [new UsageItem("Testing")];
+    usageItemTestRow.push(new UsageItem("Test Row", usageItemTestItem, vscode.TreeItemCollapsibleState.Collapsed));
+
+
+    const masterUsageItemCollapsableTreeArray: UsageItem[] = [];
+    const operatingSystemUsageTreeItemsArray: UsageItem[] = [
+      new UsageItem("Operating System: " + usageStats.operatingSystem)
+    ];
+    const gitInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
+      new UsageItem("All Git Branches:"),
+          ...usageStats.listOfGitBranches.map(branch => new UsageItem("  - " + branch)),
+      new UsageItem("Git Commits: " + usageStats.totalGitCommits),
+    ];
+    const textInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
+      new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
+      new UsageItem("Selections: " + usageStats.totalSelections),
+    ];
+    const timeInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("Time Spent: " + formatTime(usageStats.totalSecondsWhilstWindowIsFocused)),
+      new UsageItem("Time Spent outside of VSCode: " + formatTime(usageStats.totalSecondsOutsideVSCode)),
+      new UsageItem("Time Spent whilst VSCode is active: " + formatTime(usageStats.totalSecondsWhilstVSCodeIsActive)),
+    ];
+
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Operating System Info", operatingSystemUsageTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Git Info", gitInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Text Info", textInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Time Info", timeInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Active Applications", activeApplications.map(app => new UsageItem("  - " + app)), vscode.TreeItemCollapsibleState.Collapsed))
+
     if (!element) {
-      return Promise.resolve([
-        new UsageItem("Operating System Info", [
-          new UsageItem("Operating System: " + usageStats.operatingSystem),
-        ], vscode.TreeItemCollapsibleState.Collapsed),
-        new UsageItem("Git Info", [
-          new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
-          new UsageItem("All Git Branches:"),
-              ...usageStats.listOfGitBranches.map(branch => new UsageItem("  - " + branch)),
-          new UsageItem("Git Commits: " + usageStats.totalGitCommits),
-        ], vscode.TreeItemCollapsibleState.Collapsed),
-        new UsageItem("Text Info", [
-          new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
-          new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
-          new UsageItem("Selections: " + usageStats.totalSelections),
-        ], vscode.TreeItemCollapsibleState.Collapsed),
-        new UsageItem("Time Info", [
-          new UsageItem("Time Spent: " + formatTime(usageStats.totalSecondsWhilstWindowIsFocused)),
-          new UsageItem("Time Spent outside of VSCode: " + formatTime(usageStats.totalSecondsOutsideVSCode)),
-          new UsageItem("Time Spent whilst VSCode is active: " + formatTime(usageStats.totalSecondsWhilstVSCodeIsActive)),
-        ], vscode.TreeItemCollapsibleState.Collapsed),
-        new UsageItem("Active Applications", activeApplications.map(app => new UsageItem("  - " + app)), vscode.TreeItemCollapsibleState.Collapsed),
-      ]);
+      return Promise.resolve(masterUsageItemCollapsableTreeArray);
     }
     return Promise.resolve(element.children || []);
   }

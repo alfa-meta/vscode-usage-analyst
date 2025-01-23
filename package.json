@@ -2,8 +2,8 @@
   "name": "vscode-usage-analyst",
   "displayName": "VSCode Usage Analyst",
   "description": "Tracks your usage of VS Code",
-  "version": "0.0.11",
-  "publisher": "alfa",
+  "version": "0.0.11a",
+  "publisher": "alfa-meta",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -35,7 +35,7 @@
     "commands": [
       {
         "command": "vscode-usage-analyst.analyst",
-        "title": "Show Time Spent"
+        "title": "Show VSCode Usage"
       }
     ]
   },
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
-    "@types/vscode": "^1.96.0",
+    "@types/vscode": "^1.80.0",
     "install": "^0.13.0",
     "typescript": "^5.7.3"
   }
