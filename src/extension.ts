@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { exec } from "child_process";
-
 import { getCurrentGitBranch, getCurrentGitCommitValue, getGitBranches } from "./gitManagement";
 import { saveStatsToFile, loadStatsFromFile, usageStats } from "./fileManagement";
 
@@ -43,9 +42,7 @@ function checkActiveApplications() {
   }
 }
 
-
-function windowsCheckActiveApplication(){
-  // Run the ListActiveApps logic every second
+function windowsCheckActiveApplication() {
   const powershellCommand = "Get-Process | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Name";
 
   exec(`powershell.exe -Command "${powershellCommand}"`, (error, stdout, stderr) => {
@@ -59,16 +56,14 @@ function windowsCheckActiveApplication(){
       return;
     }
 
-    // Parse active applications
     activeApplications = stdout
       .split("\n")
       .map((line) => line.trim())
-      .filter((line) => line && line !== "Name" && !line.startsWith("----")); // Remove empty lines, headers, and separators
+      .filter((line) => line && line !== "Name" && !line.startsWith("----"));
   });
 }
 
 function linuxCheckActiveApplication() {
-  // Command to list all running graphical applications
   const command = `ps -eo comm | grep -E "^[^\\[]+" | sort | uniq`;
 
   exec(command, (error, stdout, stderr) => {
@@ -82,17 +77,13 @@ function linuxCheckActiveApplication() {
       return;
     }
 
-    // Parse active applications
     activeApplications = stdout
       .trim()
       .split("\n")
       .map((line) => line.trim())
-      .filter((line) => line); // Remove empty lines
+      .filter((line) => line);
   });
 }
-
-
-
 
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<UsageItem | undefined | void>();
@@ -103,11 +94,6 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   }
 
   getChildren(element?: UsageItem): Thenable<UsageItem[]> {
-    const usageItemTestRow: UsageItem[] = [];
-    const usageItemTestItem: UsageItem[] = [new UsageItem("Testing")];
-    usageItemTestRow.push(new UsageItem("Test Row", usageItemTestItem, vscode.TreeItemCollapsibleState.Collapsed));
-
-
     const masterUsageItemCollapsableTreeArray: UsageItem[] = [];
     const operatingSystemUsageTreeItemsArray: UsageItem[] = [
       new UsageItem("Operating System: " + usageStats.operatingSystem)
@@ -115,7 +101,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     const gitInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
       new UsageItem("All Git Branches:"),
-          ...usageStats.listOfGitBranches.map(branch => new UsageItem("  - " + branch)),
+      ...usageStats.listOfGitBranches.map(branch => new UsageItem("  - " + branch)),
       new UsageItem("Git Commits: " + usageStats.totalGitCommits),
     ];
     const textInfoTreeItemsArray: UsageItem[] = [
@@ -129,11 +115,11 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       new UsageItem("Time Spent whilst VSCode is active: " + formatTime(usageStats.totalSecondsWhilstVSCodeIsActive)),
     ];
 
-    masterUsageItemCollapsableTreeArray.push(new UsageItem("Operating System Info", operatingSystemUsageTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
-    masterUsageItemCollapsableTreeArray.push(new UsageItem("Git Info", gitInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
-    masterUsageItemCollapsableTreeArray.push(new UsageItem("Text Info", textInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
-    masterUsageItemCollapsableTreeArray.push(new UsageItem("Time Info", timeInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
-    masterUsageItemCollapsableTreeArray.push(new UsageItem("Active Applications", activeApplications.map(app => new UsageItem("  - " + app)), vscode.TreeItemCollapsibleState.Collapsed))
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Operating System Info", operatingSystemUsageTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed));
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Git Info", gitInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed));
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Text Info", textInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed));
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Time Info", timeInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed));
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("Active Applications", activeApplications.map(app => new UsageItem("  - " + app)), vscode.TreeItemCollapsibleState.Collapsed));
 
     if (!element) {
       return Promise.resolve(masterUsageItemCollapsableTreeArray);
@@ -158,92 +144,30 @@ class UsageItem extends vscode.TreeItem {
 // Global Variables
 const openedFiles = new Set<string>();
 let activeApplications: string[] = [];
-let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
-
+let isKeyEventProcessing: boolean = false;
 
 export function activate(context: vscode.ExtensionContext) {
   loadStatsFromFile();
-  const gitExtension = vscode.extensions.getExtension("vscode.git");
-  let isFocused = true; // Track whether the window is focused
   const usageOverviewProvider = new UsageOverviewProvider();
   vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
 
   const interval = setInterval(() => {
-    if (isFocused) {
-      usageStats.currentGitBranch = getCurrentGitBranch(usageStats);
-      usageStats.listOfGitBranches = getGitBranches(usageStats); // Fetch all branches
-      usageStats.totalGitCommits = getCurrentGitCommitValue(usageStats);
-      usageStats.totalSecondsWhilstWindowIsFocused += 1;
-    } else {
-      usageStats.totalSecondsOutsideVSCode += 1;
-    }
-    usageStats.totalSecondsWhilstVSCodeIsActive = usageStats.totalSecondsOutsideVSCode + usageStats.totalSecondsWhilstWindowIsFocused
+    usageStats.currentGitBranch = getCurrentGitBranch(usageStats);
+    usageStats.listOfGitBranches = getGitBranches(usageStats);
+    usageStats.totalGitCommits = getCurrentGitCommitValue(usageStats);
+    usageStats.totalSecondsWhilstWindowIsFocused++;
     usageOverviewProvider.refresh();
 
-    checkActiveApplications()
+    checkActiveApplications();
   }, 1000);
 
-  const disposableKeyPresses = vscode.workspace.onDidChangeTextDocument((event) => {
-    const totalChanges = event.contentChanges.reduce((acc, change) => {
-      // Sum up the length of text changes (insertions + deletions)
-      return acc + Math.abs(change.text.length);
-    }, 0);
-  
-    if (isKeyEventProcessing && totalChanges > 0) {
-      usageStats.totalKeyStrokes++; // Increment keystrokes by 1 for each user action
-      usageOverviewProvider.refresh();
-    }
+  context.subscriptions.push({
+    dispose: () => {
+      clearInterval(interval);
+      saveStatsToFile();
+      console.log("Extension deactivated, stats saved.");
+    },
   });
-
-  const disposableKeystrokes = vscode.workspace.onDidChangeTextDocument((event) => {
-    usageStats.totalKeyStrokes += event.contentChanges.length;
-    usageOverviewProvider.refresh();
-  });
-
-  const disposableFilesOpened = vscode.workspace.onDidOpenTextDocument((document) => {
-    const filePath = document.uri.fsPath;
-  
-    /*
-    * The reason why it checks for the .git fileName, is due to a bug in vscode extension api.
-    * The api returns two files a .git version of the same file and a regular string of the fileName.
-    */
-
-    if (!document.fileName.endsWith('.git')) {
-      openedFiles.add(filePath); // Track the file as opened
-      usageStats.totalFilesOpened++;
-      usageOverviewProvider.refresh();
-    }
-  });
-
-  const disposableFilesClosed = vscode.workspace.onDidCloseTextDocument((document) => {
-    const filePath = document.uri.fsPath;
-    openedFiles.delete(filePath);
-  });
-
-  const disposableSelections = vscode.window.onDidChangeTextEditorSelection(() => {
-    usageStats.totalSelections++;
-    usageOverviewProvider.refresh();
-  });
-
-  const disposableWindowState = vscode.window.onDidChangeWindowState((state) => {
-    isFocused = state.focused;
-  });
-
-  context.subscriptions.push(
-    disposableKeyPresses,
-    disposableKeystrokes,
-    disposableFilesOpened,
-    disposableFilesClosed,
-    disposableSelections,
-    disposableWindowState,
-    {
-      dispose: () => {
-        clearInterval(interval);
-        saveStatsToFile();
-        console.log("Extension deactivated, stats saved.");
-      },
-    }
-  );
 }
 
 export function deactivate() {

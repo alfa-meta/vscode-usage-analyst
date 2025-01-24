@@ -45,9 +45,13 @@
     "vscode:prepublish": "tsc -p ./"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
+    "@types/node": "^18.20.6",
     "@types/vscode": "^1.80.0",
     "install": "^0.13.0",
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "keypress": "^0.2.1",
+    "nvm": "^0.0.4"
   }
 }
