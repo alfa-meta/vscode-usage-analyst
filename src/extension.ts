@@ -121,7 +121,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     const textInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
       new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
-      new UsageItem("Selections: " + usageStats.totalSelections),
+      new UsageItem("Selections: " + usageStats.totalNumberOfSelectedText),
     ];
     const timeInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Time Spent: " + formatTime(usageStats.totalSecondsWhilstWindowIsFocused)),
@@ -166,6 +166,8 @@ export function activate(context: vscode.ExtensionContext) {
   const gitExtension = vscode.extensions.getExtension("vscode.git");
   let isFocused = true; // Track whether the window is focused
   const usageOverviewProvider = new UsageOverviewProvider();
+  const editor = vscode.window.activeTextEditor;
+  let debounceTimeout: NodeJS.Timeout;
   vscode.window.registerTreeDataProvider("usageOverview", usageOverviewProvider);
 
   const interval = setInterval(() => {
@@ -220,9 +222,30 @@ export function activate(context: vscode.ExtensionContext) {
     openedFiles.delete(filePath);
   });
 
-  const disposableSelections = vscode.window.onDidChangeTextEditorSelection(() => {
-    usageStats.totalSelections++;
-    usageOverviewProvider.refresh();
+  const disposableSelections = vscode.window.onDidChangeTextEditorSelection((event) => {
+    // Clear any existing timeout to debounce the event
+    clearTimeout(debounceTimeout);
+
+    // Set a timeout to execute the code after a delay
+    debounceTimeout = setTimeout(() => {
+      let totalSelectedLines = 0;
+      let combinedSelectedText = ""; // Accumulate all selected text here
+
+      event.selections.forEach((selection) => {
+          const selectedText = event.textEditor.document.getText(selection); // Get the selected text
+          combinedSelectedText += selectedText; // Append to the combined text
+          totalSelectedLines += selection.end.line - selection.start.line + 1; // Include the last line
+      });
+
+      console.log(`Final Selected Text: "${combinedSelectedText}"`);
+      console.log(`Length of selected text: ${combinedSelectedText.length}`);
+
+      if (totalSelectedLines > 0) {
+          usageStats.totalNumberOfSelectedText += combinedSelectedText.length;
+          console.log(`Total lines selected: ${totalSelectedLines}`);
+          usageOverviewProvider.refresh();
+      }
+    }, 200); // Delay of 200ms (adjust as needed)
   });
 
   const disposableWindowState = vscode.window.onDidChangeWindowState((state) => {

@@ -2,7 +2,7 @@
   "name": "vscode-usage-analyst",
   "displayName": "VSCode Usage Analyst",
   "description": "Tracks your usage of VS Code",
-  "version": "0.0.11a",
+  "version": "0.0.12",
   "publisher": "alfa-meta",
   "engines": {
     "vscode": "^1.80.0"
@@ -12,7 +12,7 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCommand:vscode-usage-analyst.analyst"
+    
   ],
   "contributes": {
     "viewsContainers": {

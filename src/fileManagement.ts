@@ -30,7 +30,7 @@ export interface UsageStats {
     showGitWarning: boolean;
     totalKeyStrokes: number;
     totalFilesOpened: number;
-    totalSelections: number;
+    totalNumberOfSelectedText: number;
     totalSecondsWhilstWindowIsFocused: number;
     totalSecondsOutsideVSCode: number;
     totalSecondsWhilstVSCodeIsActive: number;
@@ -45,7 +45,7 @@ export const usageStats: UsageStats = {
     showGitWarning: true,
     totalKeyStrokes: 0,
     totalFilesOpened: 0,
-    totalSelections: 0,
+    totalNumberOfSelectedText: 0,
     totalSecondsWhilstWindowIsFocused: 0,
     totalSecondsOutsideVSCode: 0,
     totalSecondsWhilstVSCodeIsActive: 0,
