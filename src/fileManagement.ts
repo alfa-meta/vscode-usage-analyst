@@ -31,6 +31,7 @@ export interface UsageStats {
     mostRecentGitCommitMessage: string;
     showGitWarning: boolean;
     totalKeyStrokes: number;
+    totalWords: number;
     totalFilesOpened: number;
     totalNumberOfSelectedText: number;
     totalSecondsWhilstWindowIsFocused: number;
@@ -48,6 +49,7 @@ export const usageStats: UsageStats = {
     mostRecentGitCommitMessage: "",
     showGitWarning: true,
     totalKeyStrokes: 0,
+    totalWords: 0,
     totalFilesOpened: 0,
     totalNumberOfSelectedText: 0,
     totalSecondsWhilstWindowIsFocused: 0,
