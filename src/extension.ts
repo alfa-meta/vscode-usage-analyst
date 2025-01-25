@@ -146,15 +146,29 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
         usageStats.mostRecentGitCommitMessage
       )
     ];
-    const textInfoTreeItemsArray: UsageItem[] = [
+
+
+    const totalTextInfoSubTreeItemsArray: UsageItem[] = [
       new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
       new UsageItem("Files Opened: " + usageStats.totalFilesOpened),
       new UsageItem("Selections: " + usageStats.totalNumberOfSelectedText),
     ];
-    const timeInfoTreeItemsArray: UsageItem[] = [
+
+
+    const textInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("Current", totalTextInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Expanded),
+      new UsageItem("Total", totalTextInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed),
+    ];
+
+    const totalTimeInfoSubTreeItemsArray: UsageItem[] = [
       new UsageItem("Time Spent: " + formatTime(usageStats.totalSecondsWhilstWindowIsFocused)),
       new UsageItem("Time Spent outside of VSCode: " + formatTime(usageStats.totalSecondsOutsideVSCode)),
       new UsageItem("Time Spent whilst VSCode is active: " + formatTime(usageStats.totalSecondsWhilstVSCodeIsActive)),
+    ];
+
+    const timeInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("Current", totalTimeInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Expanded),
+      new UsageItem("Total", totalTimeInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed),
     ];
 
     masterUsageItemCollapsableTreeArray.push(new UsageItem("Operating System Info", operatingSystemUsageTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))

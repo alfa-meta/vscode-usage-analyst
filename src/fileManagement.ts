@@ -14,8 +14,8 @@ export function saveStatsToFile() {
 export function loadStatsFromFile() {
     try {
         if (fs.existsSync(dataFilePath)) {
-        const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
-        Object.assign(usageStats, data);
+            const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
+            Object.assign(usageStats, data);
         }
     } catch (error) {
         console.error("Error loading usage stats:", error);
@@ -23,6 +23,7 @@ export function loadStatsFromFile() {
 }
 
 export interface UsageStats {
+    operatingSystem: string;
     currentGitBranch: string;
     listOfGitBranches: string[];
     totalGitCommits: number;
@@ -37,10 +38,10 @@ export interface UsageStats {
     totalSecondsWhilstWindowIsFocused: number;
     totalSecondsOutsideVSCode: number;
     totalSecondsWhilstVSCodeIsActive: number;
-    operatingSystem: string;
 }
 
 export const usageStats: UsageStats = {
+    operatingSystem: os.type(),
     currentGitBranch: "None",
     listOfGitBranches: [],
     totalGitCommits: 0,
@@ -55,5 +56,9 @@ export const usageStats: UsageStats = {
     totalSecondsWhilstWindowIsFocused: 0,
     totalSecondsOutsideVSCode: 0,
     totalSecondsWhilstVSCodeIsActive: 0,
-    operatingSystem: os.type(),
 };
+
+export function createNewSessionStats(): UsageStats {
+    const currentSessionUsageStats: UsageStats = { ...usageStats };
+    return currentSessionUsageStats; // Copies default values
+}
