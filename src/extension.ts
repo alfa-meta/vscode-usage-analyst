@@ -27,6 +27,26 @@ function formatTime(seconds: number) {
   return parts.join(" ");
 }
 
+function updateMostRecentGitCommitDetails() {
+  exec('git log -1 --pretty=format:"%ct,%s"', { cwd: vscode.workspace.rootPath }, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error fetching latest Git commit: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Git stderr: ${stderr}`);
+      return;
+    }
+
+    const [commitTime, commitMessage] = stdout.split(",", 2);
+    if (commitTime && commitMessage) {
+      usageStats.mostRecentGitCommitTime = parseInt(commitTime, 10); // UNIX timestamp
+      usageStats.mostRecentGitCommitMessage = commitMessage.trim();
+    }
+  });
+}
+
+
 function checkActiveApplications() {
   switch (usageStats.operatingSystem) {
     case "Windows_NT":
@@ -115,8 +135,16 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     const gitInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
       new UsageItem("All Git Branches:"),
-          ...usageStats.listOfGitBranches.map(branch => new UsageItem("  - " + branch)),
+      ...usageStats.listOfGitBranches.map((branch) => new UsageItem("  - " + branch)),
       new UsageItem("Git Commits: " + usageStats.totalGitCommits),
+      new UsageItem(
+        "Most Recent Commit Time: "
+      ),
+      new UsageItem(new Date(usageStats.mostRecentGitCommitTime * 1000).toLocaleString()),
+      new UsageItem("Most Recent Commit Message: "),
+      new UsageItem(
+        usageStats.mostRecentGitCommitMessage
+      )
     ];
     const textInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
@@ -175,6 +203,7 @@ export function activate(context: vscode.ExtensionContext) {
       usageStats.currentGitBranch = getCurrentGitBranch(usageStats);
       usageStats.listOfGitBranches = getGitBranches(usageStats); // Fetch all branches
       usageStats.totalGitCommits = getCurrentGitCommitValue(usageStats);
+      updateMostRecentGitCommitDetails(); // Fetch most recent commit details
       usageStats.totalSecondsWhilstWindowIsFocused += 1;
     } else {
       usageStats.totalSecondsOutsideVSCode += 1;
