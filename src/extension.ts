@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { exec } from "child_process";
+import { exec, execSync } from "child_process";
+import * as os from "os";
 
 import { getCurrentGitBranch, getCurrentGitCommitValue, getGitBranches } from "./gitManagement";
 import { saveStatsToFile, loadStatsFromFile, usageStats, currentSessionUsageStats } from "./fileManagement";
@@ -44,6 +45,39 @@ function updateMostRecentGitCommitDetails() {
       usageStats.mostRecentGitCommitMessage = commitMessage.trim();
     }
   });
+}
+
+function getOSTypeAndVersion() {
+  const osType = os.type();
+  let operatingSystem;
+
+  switch (osType) {
+    case "Windows_NT": {
+      const windowsVersion = os.release();
+      operatingSystem = `Microsoft Windows, Version: ${windowsVersion}`;
+      break;
+    }
+    case "Darwin": {
+      const macVersion = execSync("sw_vers -productVersion", { encoding: "utf8" }).trim();
+      operatingSystem = `Apple macOS, Version: ${macVersion}`;
+      break;
+    }
+    case "Linux": {
+      try {
+        const linuxDistro = execSync("cat /etc/os-release | grep '^PRETTY_NAME=' | cut -d= -f2", { encoding: "utf8" })
+          .replace(/(^\"|\"$|\n)/g, "");
+        operatingSystem = `Linux, Distribution: ${linuxDistro}`;
+      } catch (error) {
+        operatingSystem = "Linux";
+      }
+        break;
+    }
+    default: {
+      console.error(`Unsupported operating system: ${osType}`);
+      operatingSystem = `Unsupported operating system: ${osType}`;
+    }
+  }
+  return operatingSystem;
 }
 
 
@@ -126,7 +160,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
 
     const masterUsageItemCollapsableTreeArray: UsageItem[] = [];
     const operatingSystemUsageTreeItemsArray: UsageItem[] = [
-      new UsageItem("Operating System: " + usageStats.operatingSystem)
+      new UsageItem("Operating System: " + getOSTypeAndVersion())
     ];
     const gitInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
