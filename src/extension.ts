@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { exec } from "child_process";
 
 import { getCurrentGitBranch, getCurrentGitCommitValue, getGitBranches } from "./gitManagement";
-import { saveStatsToFile, loadStatsFromFile, usageStats } from "./fileManagement";
+import { saveStatsToFile, loadStatsFromFile, usageStats, currentSessionUsageStats } from "./fileManagement";
 
 function formatTime(seconds: number) {
   const years = Math.floor(seconds / (365 * 24 * 60 * 60));
@@ -111,9 +111,6 @@ function linuxCheckActiveApplication() {
   });
 }
 
-
-
-
 class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<UsageItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -126,7 +123,6 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     const usageItemTestRow: UsageItem[] = [];
     const usageItemTestItem: UsageItem[] = [new UsageItem("Testing")];
     usageItemTestRow.push(new UsageItem("Test Row", usageItemTestItem, vscode.TreeItemCollapsibleState.Collapsed));
-
 
     const masterUsageItemCollapsableTreeArray: UsageItem[] = [];
     const operatingSystemUsageTreeItemsArray: UsageItem[] = [
@@ -147,6 +143,11 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       )
     ];
 
+    const currentTextInfoSubTreeItemsArray: UsageItem[] = [
+      new UsageItem("Keystrokes: " + currentSessionUsageStats.currentNumberOfKeyStrokes),
+      new UsageItem("Files Opened: " + currentSessionUsageStats.currentFilesOpened),
+      new UsageItem("Selections: " + currentSessionUsageStats.currentNumberOfSelectedText),
+    ];
 
     const totalTextInfoSubTreeItemsArray: UsageItem[] = [
       new UsageItem("Keystrokes: " + usageStats.totalKeyStrokes),
@@ -154,10 +155,15 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       new UsageItem("Selections: " + usageStats.totalNumberOfSelectedText),
     ];
 
-
     const textInfoTreeItemsArray: UsageItem[] = [
-      new UsageItem("Current", totalTextInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Expanded),
+      new UsageItem("Current", currentTextInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Expanded),
       new UsageItem("Total", totalTextInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed),
+    ];
+
+    const currentTimeInfoSubTreeItemsArray: UsageItem[] = [
+      new UsageItem("Time Spent: " + formatTime(currentSessionUsageStats.currentSecondsWhilstWindowIsFocused)),
+      new UsageItem("Time Spent outside of VSCode: " + formatTime(currentSessionUsageStats.currentSecondsOutsideVSCode)),
+      new UsageItem("Time Spent whilst VSCode is active: " + formatTime(currentSessionUsageStats.currentSecondsWhilstVSCodeIsActive)),
     ];
 
     const totalTimeInfoSubTreeItemsArray: UsageItem[] = [
@@ -167,7 +173,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
     ];
 
     const timeInfoTreeItemsArray: UsageItem[] = [
-      new UsageItem("Current", totalTimeInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Expanded),
+      new UsageItem("Current", currentTimeInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Expanded),
       new UsageItem("Total", totalTimeInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed),
     ];
 
@@ -218,11 +224,11 @@ export function activate(context: vscode.ExtensionContext) {
       usageStats.listOfGitBranches = getGitBranches(usageStats); // Fetch all branches
       usageStats.totalGitCommits = getCurrentGitCommitValue(usageStats);
       updateMostRecentGitCommitDetails(); // Fetch most recent commit details
-      usageStats.totalSecondsWhilstWindowIsFocused += 1;
+      currentSessionUsageStats.currentSecondsWhilstWindowIsFocused += 1;
     } else {
-      usageStats.totalSecondsOutsideVSCode += 1;
+      currentSessionUsageStats.currentSecondsOutsideVSCode += 1;
     }
-    usageStats.totalSecondsWhilstVSCodeIsActive = usageStats.totalSecondsOutsideVSCode + usageStats.totalSecondsWhilstWindowIsFocused
+    currentSessionUsageStats.currentSecondsWhilstVSCodeIsActive = currentSessionUsageStats.currentSecondsOutsideVSCode + currentSessionUsageStats.currentSecondsWhilstWindowIsFocused
     usageOverviewProvider.refresh();
 
     checkActiveApplications()
@@ -235,13 +241,13 @@ export function activate(context: vscode.ExtensionContext) {
     }, 0);
   
     if (isKeyEventProcessing && totalChanges > 0) {
-      usageStats.totalKeyStrokes++; // Increment keystrokes by 1 for each user action
+      currentSessionUsageStats.currentNumberOfKeyStrokes++; // Increment keystrokes by 1 for each user action
       usageOverviewProvider.refresh();
     }
   });
 
   const disposableKeystrokes = vscode.workspace.onDidChangeTextDocument((event) => {
-    usageStats.totalKeyStrokes += event.contentChanges.length;
+    currentSessionUsageStats.currentNumberOfKeyStrokes += event.contentChanges.length;
     usageOverviewProvider.refresh();
   });
 
@@ -255,7 +261,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (!document.fileName.endsWith('.git')) {
       openedFiles.add(filePath); // Track the file as opened
-      usageStats.totalFilesOpened++;
+      currentSessionUsageStats.currentFilesOpened++;
       usageOverviewProvider.refresh();
     }
   });
@@ -268,28 +274,30 @@ export function activate(context: vscode.ExtensionContext) {
   const disposableSelections = vscode.window.onDidChangeTextEditorSelection((event) => {
     // Clear any existing timeout to debounce the event
     clearTimeout(debounceTimeout);
-
-    // Set a timeout to execute the code after a delay
+  
+    // Use a static variable to track the last selection length
+    let lastSelectionLength = 0;
+  
     debounceTimeout = setTimeout(() => {
-      let totalSelectedLines = 0;
-      let combinedSelectedText = ""; // Accumulate all selected text here
-
+      let totalSelectedTextLength = 0;
+  
+      // Calculate the length of all selected text
       event.selections.forEach((selection) => {
-          const selectedText = event.textEditor.document.getText(selection); // Get the selected text
-          combinedSelectedText += selectedText; // Append to the combined text
-          totalSelectedLines += selection.end.line - selection.start.line + 1; // Include the last line
+        const selectedText = event.textEditor.document.getText(selection); // Get the selected text
+        totalSelectedTextLength += selectedText.length;
       });
-
-      console.log(`Final Selected Text: "${combinedSelectedText}"`);
-      console.log(`Length of selected text: ${combinedSelectedText.length}`);
-
-      if (totalSelectedLines > 0) {
-          usageStats.totalNumberOfSelectedText += combinedSelectedText.length;
-          console.log(`Total lines selected: ${totalSelectedLines}`);
-          usageOverviewProvider.refresh();
+  
+      // Check if the new selection length is different from the last
+      if (totalSelectedTextLength !== lastSelectionLength) {
+        // Update the stat only with the delta
+        const delta = totalSelectedTextLength - lastSelectionLength;
+        currentSessionUsageStats.currentNumberOfSelectedText += Math.max(delta, 0);
+        lastSelectionLength = totalSelectedTextLength; // Update last known length
+        usageOverviewProvider.refresh();
       }
-    }, 200); // Delay of 200ms (adjust as needed)
+    }, 200); // Delay of 200ms
   });
+  
 
   const disposableWindowState = vscode.window.onDidChangeWindowState((state) => {
     isFocused = state.focused;

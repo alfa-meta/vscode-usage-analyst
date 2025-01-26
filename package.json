@@ -2,7 +2,7 @@
   "name": "vscode-usage-analyst",
   "displayName": "VSCode Usage Analyst",
   "description": "Tracks your usage of VS Code",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "publisher": "alfa-meta",
   "engines": {
     "vscode": "^1.80.0"

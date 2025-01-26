@@ -6,8 +6,28 @@ export const dataFilePath = path.join(
     process.env.HOME || process.env.USERPROFILE || "./",
     ".vscodeUsageStats.json"
   );
-  
+
+export function saveCurrentSessionStatstoTotalUsageStats(){
+    usageStats.totalGitCommits += currentSessionUsageStats.currentNumberOfCommits;
+    usageStats.totalKeyStrokes += currentSessionUsageStats.currentNumberOfKeyStrokes;
+    usageStats.totalFilesOpened += currentSessionUsageStats.currentFilesOpened;
+    usageStats.totalNumberOfSelectedText += currentSessionUsageStats.currentNumberOfSelectedText;
+    usageStats.totalSecondsWhilstWindowIsFocused += currentSessionUsageStats.currentSecondsWhilstWindowIsFocused;
+    usageStats.totalSecondsOutsideVSCode += currentSessionUsageStats.currentSecondsOutsideVSCode;
+    usageStats.totalSecondsWhilstVSCodeIsActive += currentSessionUsageStats.currentSecondsWhilstVSCodeIsActive;
+
+    //Reset values to default
+    currentSessionUsageStats.currentNumberOfCommits = 0;
+    currentSessionUsageStats.currentNumberOfKeyStrokes = 0;
+    currentSessionUsageStats.currentFilesOpened = 0;
+    currentSessionUsageStats.currentNumberOfSelectedText = 0;
+    currentSessionUsageStats.currentSecondsWhilstWindowIsFocused = 0;
+    currentSessionUsageStats.currentSecondsOutsideVSCode = 0;
+    currentSessionUsageStats.currentSecondsWhilstVSCodeIsActive = 0;
+}
+
 export function saveStatsToFile() {
+    saveCurrentSessionStatstoTotalUsageStats();
     fs.writeFileSync(dataFilePath, JSON.stringify(usageStats, null, 2));
 }
   
@@ -16,10 +36,16 @@ export function loadStatsFromFile() {
         if (fs.existsSync(dataFilePath)) {
             const data = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
             Object.assign(usageStats, data);
+            Object.assign(currentSessionUsageStats, data)
+
         }
     } catch (error) {
         console.error("Error loading usage stats:", error);
     }
+}
+
+export function createNewSessionStats(): SessionUsageStats {
+    return currentSessionUsageStats; // Copies default values
 }
 
 export interface UsageStats {
@@ -32,7 +58,6 @@ export interface UsageStats {
     mostRecentGitCommitMessage: string;
     showGitWarning: boolean;
     totalKeyStrokes: number;
-    totalWords: number;
     totalFilesOpened: number;
     totalNumberOfSelectedText: number;
     totalSecondsWhilstWindowIsFocused: number;
@@ -50,7 +75,6 @@ export const usageStats: UsageStats = {
     mostRecentGitCommitMessage: "",
     showGitWarning: true,
     totalKeyStrokes: 0,
-    totalWords: 0,
     totalFilesOpened: 0,
     totalNumberOfSelectedText: 0,
     totalSecondsWhilstWindowIsFocused: 0,
@@ -58,7 +82,22 @@ export const usageStats: UsageStats = {
     totalSecondsWhilstVSCodeIsActive: 0,
 };
 
-export function createNewSessionStats(): UsageStats {
-    const currentSessionUsageStats: UsageStats = { ...usageStats };
-    return currentSessionUsageStats; // Copies default values
-}
+export interface SessionUsageStats {
+    currentNumberOfCommits: number,
+    currentNumberOfKeyStrokes: number,
+    currentFilesOpened: number,
+    currentNumberOfSelectedText: number,
+    currentSecondsWhilstWindowIsFocused: number,
+    currentSecondsOutsideVSCode: number,
+    currentSecondsWhilstVSCodeIsActive: number,
+};
+
+export const currentSessionUsageStats: SessionUsageStats = {
+    currentNumberOfCommits: 0,
+    currentNumberOfKeyStrokes: 0,
+    currentFilesOpened: 0,
+    currentNumberOfSelectedText: 0,
+    currentSecondsWhilstWindowIsFocused: 0,
+    currentSecondsOutsideVSCode: 0,
+    currentSecondsWhilstVSCodeIsActive: 0,
+};
