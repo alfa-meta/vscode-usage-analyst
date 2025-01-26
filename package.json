@@ -2,7 +2,7 @@
   "name": "vscode-usage-analyst",
   "displayName": "VSCode Usage Analyst",
   "description": "Tracks your usage of VS Code",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "alfa-meta",
   "engines": {
     "vscode": "^1.80.0"
@@ -24,7 +24,7 @@
         {
           "id": "usageAnalyst",
           "title": "Usage Analyst",
-          "icon": "resources/new_icon.png"
+          "icon": "resources/icon.png"
         }
       ]
     },
