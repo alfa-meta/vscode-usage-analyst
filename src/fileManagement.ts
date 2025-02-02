@@ -1,11 +1,41 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
+import { execSync } from "child_process";
 
 export const dataFilePath = path.join(
     process.env.HOME || process.env.USERPROFILE || "./",
     ".vscodeUsageStats.json"
-  );
+);
+
+function getDefaultShell(): string {
+    const platform = os.platform();
+    try {
+        const shell =
+        platform === "win32" ? process.env.COMSPEC || "cmd.exe" : process.env.SHELL || "/bin/bash";
+        console.log("Default shell:", shell);
+        return shell;
+    } catch (error) {
+        console.error("Error determining default shell:", error);
+        return "cmd.exe"; // Fallback to cmd.exe for Windows
+    }
+}
+
+function getCurrentUser(): string {
+    let username: string;
+
+    // For Windows
+    if (process.platform === 'win32') {
+        username = process.env.USERNAME || '';
+    } 
+    // For Linux and macOS
+    else {
+        username = process.env.USER || os.userInfo().username;
+    }
+
+    return username;
+}
+  
 
 export function saveCurrentSessionStatstoTotalUsageStats(){
     usageStats.totalGitCommits += currentSessionUsageStats.currentNumberOfCommits;
@@ -50,6 +80,8 @@ export function createNewSessionStats(): SessionUsageStats {
 
 export interface UsageStats {
     operatingSystem: string;
+    currentShell: string;
+    currentUser: string;
     currentGitBranch: string;
     listOfGitBranches: string[];
     totalGitCommits: number;
@@ -67,6 +99,8 @@ export interface UsageStats {
 
 export const usageStats: UsageStats = {
     operatingSystem: os.type(),
+    currentShell: getDefaultShell(),
+    currentUser: getCurrentUser(),
     currentGitBranch: "None",
     listOfGitBranches: [],
     totalGitCommits: 0,

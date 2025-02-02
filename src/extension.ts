@@ -154,13 +154,11 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
   }
 
   getChildren(element?: UsageItem): Thenable<UsageItem[]> {
-    const usageItemTestRow: UsageItem[] = [];
-    const usageItemTestItem: UsageItem[] = [new UsageItem("Testing")];
-    usageItemTestRow.push(new UsageItem("Test Row", usageItemTestItem, vscode.TreeItemCollapsibleState.Collapsed));
-
     const masterUsageItemCollapsableTreeArray: UsageItem[] = [];
     const operatingSystemUsageTreeItemsArray: UsageItem[] = [
-      new UsageItem("Operating System: " + getOSTypeAndVersion())
+      new UsageItem("Operating System: " + getOSTypeAndVersion()),
+      new UsageItem("Current Shell: " + usageStats.currentShell),
+      new UsageItem("Current User: " + usageStats.currentUser)
     ];
     const gitInfoTreeItemsArray: UsageItem[] = [
       new UsageItem("Current Git Branch: " + usageStats.currentGitBranch),
