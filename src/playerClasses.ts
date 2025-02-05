@@ -1,4 +1,31 @@
-export interface PlayerLevel {
+class GameObject{
+
+    playerObject: PlayerLevelsInterface;
+    playerStats: PlayerStatsInterface;
+    levelUpStats: PlayerStatsInterface;
+
+    // Constructor
+    constructor(playerClassName: PlayerStatsInterface ) {
+        this.playerObject = PlayerObject;
+        this.playerStats = PlayerStats;
+        this.levelUpStats = LevelUpStats;
+    }
+}
+
+
+export interface GameInterface {
+    playerObject: PlayerLevelsInterface;
+    playerStats: PlayerStatsInterface;
+    levelUpStats: PlayerStatsInterface;
+    mageStats: PlayerStatsInterface;
+    warriorStats: PlayerStatsInterface;
+    rogueStats: PlayerStatsInterface;
+    spiritualistStats: PlayerStatsInterface;
+}
+
+
+
+interface PlayerLevelsInterface {
     level: number;
     xP: number;
     mageLevel: number;
@@ -11,16 +38,117 @@ export interface PlayerLevel {
     warriorXP: number;
 }
 
-export interface PlayerStats {
+const PlayerObject: PlayerLevelsInterface = {
+    level: 0,
+    xP: 0,
+    mageLevel: 0,
+    mageXP: 0,
+    rogueLevel: 0,
+    rogueXP: 0,
+    spiritualistLevel: 0,
+    spiritualistXP: 0,
+    warriorLevel: 0,
+    warriorXP: 0
+}
+
+interface PlayerStatsInterface {
+    hitPoints: number,
+    manaPoints: number,
+    energyPoints: number,
+
+    strength: number,
+    agility: number,
+    intellect: number,
+    vitality: number,
+    spirit: number
+}
+
+const PlayerStats: PlayerStatsInterface =  {
     hitPoints: 100,
-    manaPoints: 100,
-    energyPoints: 100,
+    manaPoints: 0,
+    energyPoints: 0,
 
     strength: 5,
     agility: 5,
     intellect: 5,
     vitality: 5,
     spirit: 5
+}
+
+const LevelUpStats: PlayerStatsInterface = {
+    hitPoints: 5,
+    manaPoints: 0,
+    energyPoints: 0,
+
+    strength: 1,
+    agility: 1,
+    intellect: 1,
+    vitality: 1,
+    spirit: 1
+}
+
+
+const HybridLevelUpStats: PlayerStatsInterface = {
+    // Total 10
+    hitPoints: 4,
+    manaPoints: 3,
+    energyPoints: 3,
+
+    //Total 20
+    strength: 4,
+    agility: 4,
+    intellect: 4,
+    vitality: 4,
+    spirit: 4,
+}
+
+
+const MageLevelUpStats: PlayerStatsInterface = {
+    hitPoints: 0,
+    manaPoints: 5,
+    energyPoints: 0,
+
+    strength: 0,
+    agility: 0,
+    intellect: 5,
+    vitality: 1,
+    spirit: 4
+}
+
+const RogueLevelUpStats: PlayerStatsInterface = {
+    hitPoints: 0,
+    manaPoints: 0,
+    energyPoints: 5,
+
+    strength: 2,
+    agility: 5,
+    intellect: 1,
+    vitality: 2,
+    spirit: 0,
+}
+
+const WarriorLevelUpStats: PlayerStatsInterface = {
+    hitPoints: 5,
+    manaPoints: 0,
+    energyPoints: 0,
+
+    strength: 5,
+    agility: 2,
+    intellect: 0,
+    vitality: 3,
+    spirit: 0
+}
+
+const SpiritualistLevelUpStats: PlayerStatsInterface = {
+    hitPoints: 2,
+    manaPoints: 3,
+    energyPoints: 0,
+
+    strength: 0,
+    agility: 0,
+    intellect: 3,
+    vitality: 2,
+    spirit: 5,
 }
 
 

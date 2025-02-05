@@ -13,7 +13,6 @@ function getWorkspacePath(): string | undefined {
 
 export function isGitRepository(usageStats: UsageStats): boolean {
   const workspacePath = getWorkspacePath();
-  console.log(workspacePath)
   if (!workspacePath) {
     console.error("Workspace path is undefined or invalid.");
     return false;

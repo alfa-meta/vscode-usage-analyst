@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
-import { execSync } from "child_process";
 
 export const dataFilePath = path.join(
     process.env.HOME || process.env.USERPROFILE || "./",
@@ -13,7 +12,6 @@ function getDefaultShell(): string {
     try {
         const shell =
         platform === "win32" ? process.env.COMSPEC || "cmd.exe" : process.env.SHELL || "/bin/bash";
-        console.log("Default shell:", shell);
         return shell;
     } catch (error) {
         console.error("Error determining default shell:", error);
