@@ -1,5 +1,9 @@
 Todos:
-    Add LICENSE.MD
-    Fix Linux issue with Git.
-    Start adding gamification
-
+    Start adding gamification.
+    Add number of extensions.
+    Add the name of current vscode theme.
+        Colour theme.
+        Icon theme.
+        Product theme.
+    Get Current Workspace.
+    Handle the situation of Git not being installed.
