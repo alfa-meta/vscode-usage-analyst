@@ -40,7 +40,11 @@ This extension tracks your usage patterns in VSCode, providing insights into you
    npm install
    ```
 
-4. Launch the extension:
+4. ```bash
+   npm run compile
+   ```
+
+5. Launch the extension:
    - Press `F5` to open a new Extension Development Host window.
 
 ## How to Use
@@ -72,7 +76,9 @@ The extension does not currently support custom commands. All stats are tracked 
   - `gitManagement.ts`: Handles Git-related operations.
   - `fileManagement.ts`: Manages stats storage and retrieval.
   - `usageOverviewProvider.ts`: Implements the Tree View UI.
-
+  - `gameManagement.ts`: Not implemented gamification.
+  - `playerClasses.ts`: Not implemented gamification.
+  
 ## Known Issues
 
 - Occasional duplicate tracking of file interactions due to `.git`-specific file events.
