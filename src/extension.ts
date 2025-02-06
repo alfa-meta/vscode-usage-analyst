@@ -1,9 +1,63 @@
-import * as vscode from "vscode";
 import { exec, execSync } from "child_process";
+import * as vscode from "vscode";
 import * as os from "os";
+import process from "process";
 
 import { getCurrentGitBranch, getCurrentGitCommitValue, getGitBranches } from "./gitManagement";
 import { saveStatsToFile, loadStatsFromFile, usageStats, currentSessionUsageStats } from "./fileManagement";
+
+function getVSCodeResourceUsage(currentOperatingSystem: string) {
+  const pid = process.pid;
+
+  switch (currentOperatingSystem) {
+    case "Windows_NT":
+      exec(`powershell -command "& { (Get-Counter '\\Process(${process.title})\\% Processor Time').CounterSamples.CookedValue / $env:NUMBER_OF_PROCESSORS }"`, (error, stdout) => {
+        if (error) {
+          console.error("Error fetching CPU usage:", error);
+          return;
+        }
+        const cpuUsage = parseFloat(stdout.trim());
+        console.log(`VSCode CPU Usage: ${cpuUsage.toFixed(2)}%`);
+        usageStats.cpuUsageByVSCode = `${cpuUsage.toFixed(2)}%`;
+      });
+
+      exec(`powershell -command "& { (Get-Process -Id ${pid}).WorkingSet / 1MB }"`, (error, stdout) => {
+        if (error) {
+          console.error("Error fetching memory usage:", error);
+          return;
+        }
+        const memoryUsage = parseFloat(stdout.trim());
+        console.log(`VSCode Memory Usage: ${memoryUsage.toFixed(2)} MB`);
+        usageStats.memoryUsageByVSCode = `${memoryUsage.toFixed(2)} MB`;
+      });
+      break;
+
+    case "Linux":
+    case "Darwin":
+      exec(`ps -p ${pid} -o %cpu,rss`, (error, stdout) => {
+        if (error) {
+          console.error("Error fetching resource usage:", error);
+          return;
+        }
+        const lines = stdout.trim().split("\n");
+        if (lines.length > 1) {
+          const values = lines[1].trim().split(/\s+/);
+          const cpuUsage = values[0];
+          const memoryUsage = (parseInt(values[1], 10) * 4) / 1024; // Convert RSS pages to MB (assumes 4 KB pages)
+          console.log(`VSCode CPU Usage: ${cpuUsage}%`);
+          console.log(`VSCode Memory Usage: ${memoryUsage.toFixed(2)} MB`);
+
+          usageStats.cpuUsageByVSCode = `${cpuUsage}%`
+          usageStats.memoryUsageByVSCode = `${memoryUsage.toFixed(2)} MB`;
+        }
+      });
+      break;
+
+    default:
+      console.error("Unsupported OS for resource tracking");
+  }
+}
+
 
 function formatTime(seconds: number) {
   const years = Math.floor(seconds / (365 * 24 * 60 * 60));
@@ -183,6 +237,8 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       usageStats.userInstalledExtensions.map(ext => new UsageItem(" - " + ext));
 
     const generalInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("VSCode CPU Usage: " + usageStats.cpuUsageByVSCode),
+      new UsageItem("VSCode Memory Usage: " + usageStats.memoryUsageByVSCode),
       new UsageItem("Number of Extensions: " + usageStats.numberOfInstalledExtensions),
       new UsageItem("Current Installed Extensions", userInstalledExtensionsUsageItemArray, vscode.TreeItemCollapsibleState.Collapsed),
     ];
@@ -303,6 +359,7 @@ export function activate(context: vscode.ExtensionContext) {
     } else {
       currentSessionUsageStats.currentSecondsOutsideVSCode += 1;
     }
+    getVSCodeResourceUsage(usageStats.operatingSystem)
     currentSessionUsageStats.currentSecondsWhilstVSCodeIsActive = currentSessionUsageStats.currentSecondsOutsideVSCode + currentSessionUsageStats.currentSecondsWhilstWindowIsFocused
     usageOverviewProvider.refresh();
 

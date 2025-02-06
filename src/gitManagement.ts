@@ -18,8 +18,8 @@ export function isGitRepository(usageStats: UsageStats): boolean {
     return false;
   }
 
+  // This only returns true if UsageStats.showGitWarning is False
   if (!usageStats.showGitWarning){
-    console.error("UsageStats.showGitWarning is False");
     return true;
   }
 

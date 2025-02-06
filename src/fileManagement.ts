@@ -81,6 +81,8 @@ export interface UsageStats {
     installedExtensions: vscode.Extension<any>[],
     userInstalledExtensions: string[],
     numberOfInstalledExtensions: number,
+    cpuUsageByVSCode: string,
+    memoryUsageByVSCode: string,
     operatingSystem: string;
     currentShell: string;
     currentUser: string;
@@ -103,6 +105,8 @@ export const usageStats: UsageStats = {
     installedExtensions: [],
     userInstalledExtensions: [],
     numberOfInstalledExtensions: 0,
+    cpuUsageByVSCode: "",
+    memoryUsageByVSCode: "",
     operatingSystem: os.type(),
     currentShell: getDefaultShell(),
     currentUser: getCurrentUser(),
