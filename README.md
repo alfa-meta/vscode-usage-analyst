@@ -4,6 +4,10 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 
 ## Features
 
+- **Displays Current Installed Extensions**:
+  - Display number of user installed extensions.
+  - List number of user installed extensions.
+
 - **Real-time Git Tracking**:
   - Detect current Git branch.
   - Fetch all branches.
@@ -20,7 +24,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
   - Tracks active applications on Windows, Linux, and macOS.
 
 - **Tree View Overview**:
-  - Displays usage stats categorized under Operating System Info, Git Info, Text Info, Time Info, and Active Applications.
+  - Displays usage stats categorized under General Info, Operating System Info, Git Info, Text Info, Time Info, and Active Applications.
 
 ## How to Install
 

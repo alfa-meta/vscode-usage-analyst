@@ -28,6 +28,38 @@ function formatTime(seconds: number) {
   return parts.join(" ");
 }
 
+function getVSCodeUserInstalledExtensions() {
+  // Get the list of installed extensions
+  const installedExtensions = vscode.extensions.all;
+
+  // Log all extensions for debugging
+  console.log("All Extensions:");
+  installedExtensions.forEach(extension => {
+    console.log(`Extension ID: ${extension.id}, Name: ${extension.packageJSON.displayName || extension.id}`);
+  });
+
+  // Filter out built-in extensions
+  const userInstalledExtensions = installedExtensions.filter(extension => {
+    const osType = os.type();
+    let isBuiltIn;
+
+    // Built-in extensions are typically located in the VS Code installation directory
+    if (osType === "Windows_NT") {
+      isBuiltIn = extension.extensionPath.includes('resources\\app\\extensions');
+    } else {
+      isBuiltIn = extension.extensionPath.includes('resources/app/extensions');
+    }
+
+    // Log whether the extension is considered built-in
+    console.log(`Extension ID: ${extension.id}, Is Built-in: ${isBuiltIn}`);
+
+    return !isBuiltIn;
+  });
+
+  return userInstalledExtensions;
+}
+
+
 function updateMostRecentGitCommitDetails() {
   exec('git log -1 --pretty=format:"%ct,%s"', { cwd: vscode.workspace.rootPath }, (error, stdout, stderr) => {
     if (error) {
@@ -155,6 +187,15 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
 
   getChildren(element?: UsageItem): Thenable<UsageItem[]> {
     const masterUsageItemCollapsableTreeArray: UsageItem[] = [];
+
+    const userInstalledExtensionsUsageItemArray: UsageItem[] = 
+      usageStats.userInstalledExtensions.map(ext => new UsageItem(" - " + ext));
+
+    const generalInfoTreeItemsArray: UsageItem[] = [
+      new UsageItem("Number of Extensions: " + usageStats.numberOfInstalledExtensions),
+      new UsageItem("Current Installed Extensions", userInstalledExtensionsUsageItemArray, vscode.TreeItemCollapsibleState.Collapsed),
+    ];
+
     const operatingSystemUsageTreeItemsArray: UsageItem[] = [
       new UsageItem("Operating System: " + getOSTypeAndVersion()),
       new UsageItem("Current Shell: " + usageStats.currentShell),
@@ -209,6 +250,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       new UsageItem("Total", totalTimeInfoSubTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed),
     ];
 
+    masterUsageItemCollapsableTreeArray.push(new UsageItem("General Info", generalInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
     masterUsageItemCollapsableTreeArray.push(new UsageItem("Operating System Info", operatingSystemUsageTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
     masterUsageItemCollapsableTreeArray.push(new UsageItem("Git Info", gitInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
     masterUsageItemCollapsableTreeArray.push(new UsageItem("Text Info", textInfoTreeItemsArray, vscode.TreeItemCollapsibleState.Collapsed))
@@ -239,6 +281,7 @@ class UsageItem extends vscode.TreeItem {
 const openedFiles = new Set<string>();
 let activeApplications: string[] = [];
 let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
+const extensionList: string[] = [];
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -252,11 +295,20 @@ export function activate(context: vscode.ExtensionContext) {
 
   const interval = setInterval(() => {
     if (isFocused) {
+      usageStats.installedExtensions = getVSCodeUserInstalledExtensions();
+      // Needs optimising
+      usageStats.installedExtensions.forEach(extension => {
+        const extensionString = `${extension.packageJSON.displayName || extension.id}`;
+        // console.log(`Extension ID: ${extension.id}, Name: ${extension.packageJSON.displayName || extension.id}`);
+        extensionList.push(extensionString);
+      });
+      usageStats.userInstalledExtensions = extensionList;
       usageStats.currentGitBranch = getCurrentGitBranch(usageStats);
       usageStats.listOfGitBranches = getGitBranches(usageStats); // Fetch all branches
       usageStats.totalGitCommits = getCurrentGitCommitValue(usageStats);
       updateMostRecentGitCommitDetails(); // Fetch most recent commit details
       currentSessionUsageStats.currentSecondsWhilstWindowIsFocused += 1;
+      usageStats.numberOfInstalledExtensions = usageStats.installedExtensions.length;
     } else {
       currentSessionUsageStats.currentSecondsOutsideVSCode += 1;
     }

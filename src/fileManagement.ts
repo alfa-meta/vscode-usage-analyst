@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
+import * as vscode from "vscode";
 
 export const dataFilePath = path.join(
     process.env.HOME || process.env.USERPROFILE || "./",
@@ -77,6 +78,9 @@ export function createNewSessionStats(): SessionUsageStats {
 }
 
 export interface UsageStats {
+    installedExtensions: vscode.Extension<any>[],
+    userInstalledExtensions: string[],
+    numberOfInstalledExtensions: number,
     operatingSystem: string;
     currentShell: string;
     currentUser: string;
@@ -96,6 +100,9 @@ export interface UsageStats {
 }
 
 export const usageStats: UsageStats = {
+    installedExtensions: [],
+    userInstalledExtensions: [],
+    numberOfInstalledExtensions: 0,
     operatingSystem: os.type(),
     currentShell: getDefaultShell(),
     currentUser: getCurrentUser(),
