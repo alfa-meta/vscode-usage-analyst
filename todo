@@ -7,3 +7,5 @@ Todos:
         Product theme.
     Get Current Workspace.
     Handle the situation of Git not being installed.
+    Track how much resources are being used by VSCode.
+    Track how much resources are being used by VSCode Analyst.
