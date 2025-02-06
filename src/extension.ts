@@ -32,12 +32,6 @@ function getVSCodeUserInstalledExtensions() {
   // Get the list of installed extensions
   const installedExtensions = vscode.extensions.all;
 
-  // Log all extensions for debugging
-  console.log("All Extensions:");
-  installedExtensions.forEach(extension => {
-    console.log(`Extension ID: ${extension.id}, Name: ${extension.packageJSON.displayName || extension.id}`);
-  });
-
   // Filter out built-in extensions
   const userInstalledExtensions = installedExtensions.filter(extension => {
     const osType = os.type();
@@ -49,9 +43,6 @@ function getVSCodeUserInstalledExtensions() {
     } else {
       isBuiltIn = extension.extensionPath.includes('resources/app/extensions');
     }
-
-    // Log whether the extension is considered built-in
-    console.log(`Extension ID: ${extension.id}, Is Built-in: ${isBuiltIn}`);
 
     return !isBuiltIn;
   });
@@ -281,7 +272,6 @@ class UsageItem extends vscode.TreeItem {
 const openedFiles = new Set<string>();
 let activeApplications: string[] = [];
 let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
-const extensionList: string[] = [];
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -295,6 +285,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const interval = setInterval(() => {
     if (isFocused) {
+      const extensionList: string[] = [];
       usageStats.installedExtensions = getVSCodeUserInstalledExtensions();
       // Needs optimising
       usageStats.installedExtensions.forEach(extension => {
