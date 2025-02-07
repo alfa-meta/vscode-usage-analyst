@@ -7,11 +7,9 @@ import { getCurrentGitBranch, getCurrentGitCommitValue, getGitBranches } from ".
 import { saveStatsToFile, loadStatsFromFile, usageStats, currentSessionUsageStats } from "./fileManagement";
 
 function getVSCodeResourceUsage(currentOperatingSystem: string) {
-  const pid = process.pid;
-
   switch (currentOperatingSystem) {
     case "Windows_NT":
-      exec(`powershell -command "& { (Get-Counter '\\Process(${process.title})\\% Processor Time').CounterSamples.CookedValue / $env:NUMBER_OF_PROCESSORS }"`, (error, stdout) => {
+      exec(`powershell -command "& { (Get-Process | Where-Object { $_.Name -like '*Code*' }).CPU }`, (error, stdout) => {
         if (error) {
           console.error("Error fetching CPU usage:", error);
           return;
@@ -328,6 +326,8 @@ class UsageItem extends vscode.TreeItem {
 const openedFiles = new Set<string>();
 let activeApplications: string[] = [];
 let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
+const processName = process.title.includes("Code") ? "Code - Insiders" : "Code";
+const pid = process.pid; // Process Id, works for all OS's
 
 
 export function activate(context: vscode.ExtensionContext) {
