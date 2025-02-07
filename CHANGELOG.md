@@ -3,3 +3,4 @@
 ## [0.1.9] - 07/02/2025
 ### Added CHANGELOG
  - Added CHANGELOG.md to log all of the changes.
+ - Removed VSCode CPU and Memory Usage from General Info as it does not work properly on Windows 

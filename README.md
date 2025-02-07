@@ -5,7 +5,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 ## Features
 
 - **Displays General Info**:
-  -  VSCode CPU and RAM usage
+  -  VSCode CPU and RAM usage (Currently Disabled)
 
 - **Displays Current Installed Extensions**:
   - Display number of user installed extensions.
