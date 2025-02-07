@@ -2,7 +2,7 @@
   "name": "vscode-usage-analyst",
   "displayName": "VSCode Usage Analyst",
   "description": "Tracks your usage of VS Code",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publisher": "alfa-meta",
   "icon": "resources/icon.png",
   "engines": {
@@ -17,6 +17,7 @@
     "type": "git",
     "url": "https://github.com/alfa-meta/vscode-usage-analyst.git"
   },
+  "changelog": "https://github.com/alfa-meta/vscode-usage-analyst/main/CHANGELOG.md",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
