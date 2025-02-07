@@ -4,6 +4,9 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 
 ## Features
 
+- **Displays General Info**:
+  -  VSCode CPU and RAM usage
+
 - **Displays Current Installed Extensions**:
   - Display number of user installed extensions.
   - List number of user installed extensions.
@@ -30,7 +33,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 
 1. Clone this repository:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/alfa-meta/vscode-usage-analyst
    ```
 
 2. Open the folder in VSCode.
@@ -51,10 +54,13 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 
 1. Open a project in VSCode.
 2. The extension automatically begins tracking stats like:
+   - CPU and RAM usage
+   - Installed Extensions
    - Keystrokes
    - Files opened
    - Git activity
    - Time spent in VSCode
+   - Active Applications
 
 3. View the stats in the "Usage Overview" tree view in the Explorer sidebar.
 
