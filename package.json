@@ -50,8 +50,12 @@
   },
   "devDependencies": {
     "@types/node": "^18.19.74",
+    "@types/pidusage": "^2.0.5",
     "@types/vscode": "^1.80.0",
     "install": "^0.13.0",
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "pidusage": "^3.0.2"
   }
 }
