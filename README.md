@@ -9,7 +9,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
   - VSCode CPU and RAM usage (Currently Disabled)
   - Current Selected User Theme
   - Current Selected File Icon Theme
-  - Current Selected Produt Icon Theme
+  - Current Selected Product Icon Theme
 
 - **Displays Current Installed Extensions**:
 
