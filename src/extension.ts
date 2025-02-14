@@ -1,7 +1,6 @@
 import { exec, execSync } from "child_process";
 import * as vscode from "vscode";
 import * as os from "os";
-import process from "process";
 
 import {
   getCurrentGitBranch,
@@ -21,6 +20,23 @@ function setCurrentTheme() {
     .get("colorTheme");
 
   usageStats.currentTheme = theme ? theme : "undefined";
+}
+
+function getAllAvailableThemes() {
+  const allExtensions = vscode.extensions.all;
+
+  // Extract themes from extensions that contribute to "themes"
+  const themes: string[] = allExtensions
+    .flatMap((extension) => {
+      const contributes = extension.packageJSON.contributes;
+      if (contributes && contributes.themes) {
+        return contributes.themes.map((theme: any) => theme.label);
+      }
+      return [];
+    })
+    .sort(); // Sort alphabetically
+
+  usageStats.currentInstalledThemes = themes;
 }
 
 function formatTime(seconds: number) {
@@ -222,10 +238,20 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
         (ext) => new UsageItem(" - " + ext)
       );
 
+    const userInstalledThemesUsageItemArray: UsageItem[] =
+      usageStats.currentInstalledThemes.map(
+        (ext) => new UsageItem(" - " + ext)
+      );
+
     const generalInfoTreeItemsArray: UsageItem[] = [
       // new UsageItem("VSCode CPU Usage: " + usageStats.cpuUsageByVSCode),
       // new UsageItem("VSCode Memory Usage: " + usageStats.memoryUsageByVSCode),
       new UsageItem("Current Theme: " + usageStats.currentTheme),
+      new UsageItem(
+        "List of Installed Themes: ",
+        userInstalledThemesUsageItemArray,
+        vscode.TreeItemCollapsibleState.Collapsed
+      ),
 
       new UsageItem(
         "Number of Extensions: " + usageStats.numberOfInstalledExtensions
@@ -410,10 +436,8 @@ let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
 
 export function activate(context: vscode.ExtensionContext) {
   loadStatsFromFile();
-  const gitExtension = vscode.extensions.getExtension("vscode.git");
   let isFocused = true; // Track whether the window is focused
   const usageOverviewProvider = new UsageOverviewProvider();
-  const editor = vscode.window.activeTextEditor;
   let debounceTimeout: NodeJS.Timeout;
   vscode.window.registerTreeDataProvider(
     "usageOverview",
@@ -448,6 +472,8 @@ export function activate(context: vscode.ExtensionContext) {
       currentSessionUsageStats.currentSecondsWhilstWindowIsFocused;
 
     setCurrentTheme();
+    getAllAvailableThemes();
+
     usageOverviewProvider.refresh();
 
     checkActiveApplications();
