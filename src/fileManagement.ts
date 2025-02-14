@@ -86,6 +86,7 @@ export interface UsageStats {
   installedExtensions: vscode.Extension<any>[];
   currentTheme: string;
   currentFileIconTheme: string;
+  currentProductIconTheme: string;
   currentInstalledThemes: string[];
   userInstalledExtensions: string[];
   numberOfInstalledExtensions: number;
@@ -113,6 +114,7 @@ export const usageStats: UsageStats = {
   installedExtensions: [],
   currentTheme: "",
   currentFileIconTheme: "",
+  currentProductIconTheme: "",
   currentInstalledThemes: [],
   userInstalledExtensions: [],
   numberOfInstalledExtensions: 0,

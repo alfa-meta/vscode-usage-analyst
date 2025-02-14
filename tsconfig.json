@@ -10,5 +10,10 @@
     "types": ["vscode", "node"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", ".vscode-test", "gameManagement.ts", "playerClasses.ts"]
+  "exclude": [
+    "node_modules",
+    ".vscode-test",
+    "gameManagement.ts",
+    "playerClasses.ts"
+  ]
 }

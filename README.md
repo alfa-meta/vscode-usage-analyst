@@ -5,25 +5,33 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 ## Features
 
 - **Displays General Info**:
-  -  VSCode CPU and RAM usage (Currently Disabled)
+
+  - VSCode CPU and RAM usage (Currently Disabled)
+  - Current Selected User Theme
+  - Current Selected File Icon Theme
+  - Current Selected Produt Icon Theme
 
 - **Displays Current Installed Extensions**:
+
   - Display number of user installed extensions.
   - List number of user installed extensions.
 
 - **Real-time Git Tracking**:
+
   - Detect current Git branch.
   - Fetch all branches.
   - Count total Git commits.
   - Display the most recent commit time and message.
 
 - **Session and Total Usage Stats**:
+
   - Keystrokes count.
   - Files opened.
   - Selected text count.
   - Time spent in VSCode, outside VSCode, and while VSCode is active.
 
 - **Operating System Compatibility**:
+
   - Tracks active applications on Windows, Linux, and macOS.
 
 - **Tree View Overview**:
@@ -32,6 +40,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 ## How to Install
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/alfa-meta/vscode-usage-analyst
    ```
@@ -39,6 +48,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 2. Open the folder in VSCode.
 
 3. Install dependencies:
+
    ```bash
    npm install
    ```
@@ -54,6 +64,7 @@ This extension tracks your usage patterns in VSCode, providing insights into you
 
 1. Open a project in VSCode.
 2. The extension automatically begins tracking stats like:
+
    - CPU and RAM usage
    - Installed Extensions
    - Keystrokes
@@ -76,6 +87,7 @@ The extension does not currently support custom commands. All stats are tracked 
 ## Development Notes
 
 - Stats are saved to a JSON file:
+
   - **Path:** `$HOME/.vscodeUsageStats.json` (or the equivalent on your OS).
 
 - **Key Files**:
@@ -84,7 +96,7 @@ The extension does not currently support custom commands. All stats are tracked 
   - `usageOverviewProvider.ts`: Implements the Tree View UI.
   - `gameManagement.ts`: Not implemented gamification.
   - `playerClasses.ts`: Not implemented gamification.
-  
+
 ## Known Issues
 
 - Occasional duplicate tracking of file interactions due to `.git`-specific file events.

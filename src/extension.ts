@@ -33,6 +33,17 @@ function setCurrentFileIconTheme() {
   usageStats.currentFileIconTheme = formattedIconTheme;
 }
 
+function setCurrrentProductIconTheme() {
+  const config = vscode.workspace.getConfiguration("workbench");
+  const productIconTheme = config.get<string>("productIconTheme") ?? "default";
+
+  const formattedProductIconTheme = productIconTheme
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  usageStats.currentProductIconTheme = formattedProductIconTheme;
+}
+
 function getAllAvailableThemes() {
   const allExtensions = vscode.extensions.all;
 
@@ -260,9 +271,7 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       new UsageItem("Current Theme: " + usageStats.currentTheme),
       new UsageItem("File Icon Theme: " + usageStats.currentFileIconTheme),
       new UsageItem(
-        "List of Installed Themes: ",
-        userInstalledThemesUsageItemArray,
-        vscode.TreeItemCollapsibleState.Collapsed
+        "Current Product Icon Theme: " + usageStats.currentProductIconTheme
       ),
       new UsageItem(
         "Number of Extensions: " + usageStats.numberOfInstalledExtensions
@@ -270,6 +279,11 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       new UsageItem(
         "Current Installed Extensions",
         userInstalledExtensionsUsageItemArray,
+        vscode.TreeItemCollapsibleState.Collapsed
+      ),
+      new UsageItem(
+        "List of Installed Themes: ",
+        userInstalledThemesUsageItemArray,
         vscode.TreeItemCollapsibleState.Collapsed
       ),
     ];
@@ -485,6 +499,7 @@ export function activate(context: vscode.ExtensionContext) {
     setCurrentTheme();
     getAllAvailableThemes();
     setCurrentFileIconTheme();
+    setCurrrentProductIconTheme();
 
     usageOverviewProvider.refresh();
 
