@@ -85,6 +85,7 @@ export function createNewSessionStats(): SessionUsageStats {
 export interface UsageStats {
   installedExtensions: vscode.Extension<any>[];
   currentTheme: string;
+  currentFileIconTheme: string;
   currentInstalledThemes: string[];
   userInstalledExtensions: string[];
   numberOfInstalledExtensions: number;
@@ -111,6 +112,7 @@ export interface UsageStats {
 export const usageStats: UsageStats = {
   installedExtensions: [],
   currentTheme: "",
+  currentFileIconTheme: "",
   currentInstalledThemes: [],
   userInstalledExtensions: [],
   numberOfInstalledExtensions: 0,

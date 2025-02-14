@@ -22,6 +22,17 @@ function setCurrentTheme() {
   usageStats.currentTheme = theme ? theme : "undefined";
 }
 
+function setCurrentFileIconTheme() {
+  const config = vscode.workspace.getConfiguration("workbench");
+  const iconTheme = config.get<string>("iconTheme") ?? "default";
+
+  const formattedIconTheme = iconTheme
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  usageStats.currentFileIconTheme = formattedIconTheme;
+}
+
 function getAllAvailableThemes() {
   const allExtensions = vscode.extensions.all;
 
@@ -247,12 +258,12 @@ class UsageOverviewProvider implements vscode.TreeDataProvider<UsageItem> {
       // new UsageItem("VSCode CPU Usage: " + usageStats.cpuUsageByVSCode),
       // new UsageItem("VSCode Memory Usage: " + usageStats.memoryUsageByVSCode),
       new UsageItem("Current Theme: " + usageStats.currentTheme),
+      new UsageItem("File Icon Theme: " + usageStats.currentFileIconTheme),
       new UsageItem(
         "List of Installed Themes: ",
         userInstalledThemesUsageItemArray,
         vscode.TreeItemCollapsibleState.Collapsed
       ),
-
       new UsageItem(
         "Number of Extensions: " + usageStats.numberOfInstalledExtensions
       ),
@@ -473,6 +484,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     setCurrentTheme();
     getAllAvailableThemes();
+    setCurrentFileIconTheme();
 
     usageOverviewProvider.refresh();
 
