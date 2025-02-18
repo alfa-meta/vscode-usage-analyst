@@ -461,7 +461,7 @@ let isKeyEventProcessing: boolean = false; // Flag to prevent double increment
 
 export function activate(context: vscode.ExtensionContext) {
   loadStatsFromFile();
-  let isFocused = true; // Track whether the window is focused
+  let isFocused = vscode.window.state.focused; // Track whether the window is focused
   const usageOverviewProvider = new UsageOverviewProvider();
   let debounceTimeout: NodeJS.Timeout;
   vscode.window.registerTreeDataProvider(
