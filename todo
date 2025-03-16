@@ -1,12 +1,6 @@
 Todos:
 Start adding gamification.
 Optimise General info get VSCode Extensions
-Add the name of current vscode theme.
-Icon theme.
-Product theme.
-Get Current Workspace.
-Handle the situation of Git not being installed.
-Track how much resources are being used by VSCode Analyst.
-Optimise the code so that it only runs functions if the trees are opened.
-Split the files up and make usageStats less of a monolith.
-Write comments, at the moment this project looks like shit.
+
+2. Split the files up and make usageStats less of a monolith.
+3. Write comments, at the moment this project looks like shit.

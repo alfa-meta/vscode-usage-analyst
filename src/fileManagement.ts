@@ -83,6 +83,7 @@ export function createNewSessionStats(): SessionUsageStats {
 }
 
 export interface UsageStats {
+  currentWorkingDirectory: string;
   installedExtensions: vscode.Extension<any>[];
   currentTheme: string;
   currentFileIconTheme: string;
@@ -111,6 +112,7 @@ export interface UsageStats {
 }
 
 export const usageStats: UsageStats = {
+  currentWorkingDirectory: "",
   installedExtensions: [],
   currentTheme: "",
   currentFileIconTheme: "",
